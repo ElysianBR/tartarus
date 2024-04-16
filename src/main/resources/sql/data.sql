@@ -1,0 +1,1 @@
+INSERT INTO "tartarus".users(cod_user, first_name, last_name, date_of_birth, email, user_name, password) VALUES (1, 'William', 'Civa', to_date('05/10/2002', 'dd/mm/yyyy'), 'williamciva@elysian.com.br','williamciva', '123456789' );

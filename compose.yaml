@@ -15,4 +15,4 @@ services:
     environment:
       - POSTGRES_USER=TARTARUS
       - POSTGRES_PASSWORD=TARTARUS
-      - POSTGRES_DB=tartarus
+      - POSTGRES_DB=TARTARUS
