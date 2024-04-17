@@ -20,21 +20,23 @@ import org.springframework.validation.annotation.Validated;
 import java.util.ArrayList;
 
 @Service
-@Validated
 public class AuthService {
+
+    private final MessageService messageService;
     private final UserDAO userDAO;
     private static final String TOKEN_PREFIX = "Bearer ";
     private static final String HEADER_STRING = "Authorization";
 
 
     @Autowired
-    private AuthService(UserDAO userDAO) {
+    private AuthService(MessageService messageService, UserDAO userDAO) {
+        this.messageService = messageService;
         this.userDAO = userDAO;
     }
 
 
-    public static Authentication getAuthentication(HttpServletRequest request) {
-        String token = AuthService.resolveToken(request);
+    public Authentication getAuthentication(HttpServletRequest request) {
+        String token = this.resolveToken(request);
         String user = JwtUtil.extractUsername(token);
 
         if (user != null) {
@@ -42,19 +44,19 @@ public class AuthService {
             return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
         }
 
-        throw new BadCredentialsException("Invalid Bearer Token");
+        throw new BadCredentialsException(messageService.getMessage("tartarus.invalid.bearer.token"));
 
     }
 
-    private static String resolveToken(HttpServletRequest request) throws BadCredentialsException {
+    private String resolveToken(HttpServletRequest request) throws BadCredentialsException {
         String header = request.getHeader(HEADER_STRING);
 
         if (header == null) {
-            throw new BadCredentialsException("Authorization Header not Found");
+            throw new BadCredentialsException(messageService.getMessage("tartarus.authorization.header.not.found"));
         }
 
         if (!header.startsWith(TOKEN_PREFIX)) {
-            throw new BadCredentialsException("Bearer Token not Found");
+            throw new BadCredentialsException(messageService.getMessage("tartarus.invalid.bearer.token"));
         }
 
         return header.replace(TOKEN_PREFIX, "");
@@ -65,18 +67,11 @@ public class AuthService {
         User user = userDAO.findByUsernameAndPassword(auth.getUsername(), auth.getPassword());
 
         if (user != null) {
-            UserDetails userDetails =
-                    org.springframework.security.core.userdetails.User.builder()
-                            .username(user.getEmail())
-                            .password(user.getPassword())
-                            .roles(user.getRole())
-                            .build();
-
             return JwtUtil.generateToken(user);
         }
 
 
-        throw new UsernameNotFoundException(String.format("User: %s, not found", auth.getUsername()));
+        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.user.not.found"), auth.getUsername()));
     }
 
 }

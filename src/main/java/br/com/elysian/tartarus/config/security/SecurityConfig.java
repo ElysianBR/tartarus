@@ -1,5 +1,7 @@
 package br.com.elysian.tartarus.config.security;
 
+import br.com.elysian.tartarus.service.AuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -16,6 +18,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private AuthService authService;
+
+    @Autowired
+    public SecurityConfig(AuthService authService) {
+        this.authService = authService;
+    }
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -31,7 +39,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new AuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new AuthenticationFilter(authService), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
