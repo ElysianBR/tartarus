@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.security;
+package br.com.elysian.tartarus.config.security;
 
 import br.com.elysian.tartarus.service.AuthService;
 import jakarta.servlet.FilterChain;

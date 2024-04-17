@@ -4,6 +4,7 @@ import br.com.elysian.tartarus.dto.AuthDTO;
 import br.com.elysian.tartarus.model.User;
 import br.com.elysian.tartarus.repository.UserDAO;
 import br.com.elysian.tartarus.utils.JwtUtil;
+import br.com.elysian.tartarus.utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +13,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -59,8 +61,8 @@ public class AuthService {
     }
 
 
-    public String getAuthorization(AuthDTO auth) {
-        User user = userDAO.findByUserNameAndPassword(auth.getUsername(), auth.getPassword());
+    public String getAuthorization(AuthDTO auth) throws UsernameNotFoundException {
+        User user = userDAO.findByUsernameAndPassword(auth.getUsername(), auth.getPassword());
 
         if (user != null) {
             UserDetails userDetails =
@@ -74,7 +76,7 @@ public class AuthService {
         }
 
 
-        return null;
+        throw new UsernameNotFoundException(String.format("User: %s, not found", auth.getUsername()));
     }
 
 }
