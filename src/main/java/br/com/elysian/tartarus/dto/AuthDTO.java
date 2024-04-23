@@ -6,18 +6,15 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 
-
-
 @Getter
 public class AuthDTO {
 
-    @NotBlank
     @NotNull
-    private String username;
+    @NotBlank
+    private String identity;
 
-    @NotBlank
     @NotNull
-    @Min(value = 9, message = "The password must be at least 9 characters long")
+    @NotBlank
     private String password;
 
 }

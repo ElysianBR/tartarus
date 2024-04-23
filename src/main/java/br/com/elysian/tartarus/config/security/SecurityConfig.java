@@ -27,7 +27,7 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/api/noAuth/**", "/error", "/api/auth/**");
+        return (web) -> web.ignoring().requestMatchers("/api/noAuth/**", "/error", "/api/auth/**", "/api/user/registration");
     }
 
     @Bean
@@ -35,7 +35,6 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .headers(httpSecurityHeadersConfigurer -> httpSecurityHeadersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
-                        .requestMatchers("/api/noAuth/**", "/error", "/api/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

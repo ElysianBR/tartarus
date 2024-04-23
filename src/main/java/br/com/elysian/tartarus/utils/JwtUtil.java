@@ -18,9 +18,10 @@ public class JwtUtil {
 
         return JWT.create()
                 .withSubject(user.getUsername())
+                .withClaim("email", user.getEmail())
+                .withClaim("role", user.getRole())
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
-                .withClaim("role", user.getRole())
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(SECRET.getBytes()));
     }

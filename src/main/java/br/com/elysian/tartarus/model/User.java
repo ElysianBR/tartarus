@@ -1,36 +1,42 @@
 package br.com.elysian.tartarus.model;
 
+import br.com.elysian.tartarus.dto.RegistrationDTO;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDate;
 
 @Getter
+@AllArgsConstructor
 @Entity
 @Table(schema = "tartarus", name = "users")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cod_user")
     private Integer codUser;
 
-    @Column(name = "first_name")
+    @Column(name = "ativo", columnDefinition = "default false")
+    private boolean ativo;
+
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @Column(name = "email")
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "username")
+    @Column(name = "username", unique = true)
     private String username;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
     @Column(name = "role")
@@ -39,14 +45,10 @@ public class User {
     public User() {
     }
 
-    public User(Integer codUser, String firstName, String lastName, LocalDate dateOfBirth, String email, String username, String password, String role) {
-        this.codUser = codUser;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.dateOfBirth = dateOfBirth;
-        this.email = email;
-        this.username = username;
-        this.password = password;
-        this.role = role;
+    public User(RegistrationDTO registrationDTO) {
+        this.firstName = registrationDTO.getFirstName();
+        this.lastName = registrationDTO.getLastName();
+        this.email = registrationDTO.getEmail();
+        this.password = registrationDTO.getPassword();
     }
 }

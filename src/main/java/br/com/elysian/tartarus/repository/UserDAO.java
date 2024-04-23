@@ -4,7 +4,6 @@ import br.com.elysian.tartarus.model.User;
 
 public interface UserDAO extends CRUDRepository<User, Integer>{
 
-     User findByUsername(String userName);
-     User findByUsernameAndPassword(String userName, String password);
+     User findByUsernameOrEmailAndPassword(String username, String email, String password);
 
 }

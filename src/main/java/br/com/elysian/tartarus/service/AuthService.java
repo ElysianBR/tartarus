@@ -64,14 +64,15 @@ public class AuthService {
 
 
     public String getAuthorization(AuthDTO auth) throws UsernameNotFoundException {
-        User user = userDAO.findByUsernameAndPassword(auth.getUsername(), auth.getPassword());
+        User user = userDAO.findByUsernameOrEmailAndPassword(auth.getIdentity(), auth.getIdentity(), auth.getPassword());
 
         if (user != null) {
             return JwtUtil.generateToken(user);
         }
 
 
-        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.user.not.found"), auth.getUsername()));
+        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.user.or.mail.not.found"), auth.getIdentity()));
     }
+
 
 }

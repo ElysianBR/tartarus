@@ -2,6 +2,7 @@ package br.com.elysian.tartarus.controller;
 
 import br.com.elysian.tartarus.annotation.SecurityXSS;
 import br.com.elysian.tartarus.dto.AuthDTO;
+import br.com.elysian.tartarus.model.User;
 import br.com.elysian.tartarus.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

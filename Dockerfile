@@ -1,2 +1,2 @@
-# the base image
-FROM openjdk:21-slim
+FROM openjdk:21
+ENV PATH="C:\Program Files\Docker\Docker\resources\bin:${PATH}"

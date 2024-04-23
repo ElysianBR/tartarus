@@ -1,6 +1,7 @@
 package br.com.elysian.tartarus.config.web;
 
 import br.com.elysian.tartarus.annotation.SecurityXSS;
+import br.com.elysian.tartarus.exception.ReCaptchaException;
 import br.com.elysian.tartarus.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,14 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND, message);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+
+    @SecurityXSS
+    @ExceptionHandler(ReCaptchaException.class)
+    public ResponseEntity<ErrorResponse> handleCaptchaException(ReCaptchaException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN, ex);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
 
 
