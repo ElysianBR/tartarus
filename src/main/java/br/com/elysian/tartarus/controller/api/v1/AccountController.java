@@ -2,6 +2,7 @@ package br.com.elysian.tartarus.controller.api.v1;
 
 import br.com.elysian.tartarus.annotation.SecurityXSS;
 import br.com.elysian.tartarus.dto.RegistrationDTO;
+import br.com.elysian.tartarus.dto.SuccessDTO;
 import br.com.elysian.tartarus.dto.TokenDTO;
 import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
 import br.com.elysian.tartarus.exception.ReCaptchaException;
@@ -9,6 +10,8 @@ import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.AccountService;
 import br.com.elysian.tartarus.service.captcha.CaptchaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -18,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @Transactional
@@ -55,17 +59,23 @@ public class AccountController {
     }
 
 
+    @Operation(
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @SecurityXSS
     @PostMapping("/confirmAccount")
-    public ResponseEntity<Object> confirmAccount(@RequestParam("sequenceToken") String sequenceToken) {
+    public ResponseEntity<SuccessDTO> confirmAccount(@RequestParam("sequenceToken") String sequenceToken) {
         return ResponseEntity.ok(accountService.confirmAccount(sequenceToken));
     }
 
 
+    @Operation(
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     @SecurityXSS
     @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
     @GetMapping("/accountLoggedIn")
-    public ResponseEntity<Object> accountLoggedIn() {
+    public ResponseEntity<Account> accountLoggedIn() {
         return ResponseEntity.ok(accountService.getUserLogged());
     }
 

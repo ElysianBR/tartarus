@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.config.web.error;
+package br.com.elysian.tartarus.config.error;
 
 import lombok.Getter;
 import lombok.Setter;

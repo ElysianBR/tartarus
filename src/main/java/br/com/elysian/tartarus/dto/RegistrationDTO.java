@@ -19,7 +19,7 @@ public class RegistrationDTO {
 
     @NotNull
     @NotBlank
-    @Length(max = 30)
+    @Length(max = 50)
     private String lastName;
 
     @NotNull

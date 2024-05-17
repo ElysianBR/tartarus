@@ -4,11 +4,13 @@ import br.com.elysian.tartarus.dto.RegistrationDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -33,17 +35,21 @@ public class Account {
     @ColumnDefault("false")
     private boolean active = false;
 
-    @Column(name = "first_name", nullable = false)
+    @Length(max = 30)
+    @Column(name = "first_name",  length = 30, nullable = false)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false)
+    @Length(max = 50)
+    @Column(name = "last_name", length = 50, nullable = false)
     private String lastName;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
+    @Email
     @Column(name = "email", nullable = false, unique = true)
     private String email;
+
 
     @Column(name = "password", nullable = false)
     @JsonIgnore

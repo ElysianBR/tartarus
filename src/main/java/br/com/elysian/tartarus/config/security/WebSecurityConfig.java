@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.config.security.in;
+package br.com.elysian.tartarus.config.security;
 
 import br.com.elysian.tartarus.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,10 @@ public class WebSecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/error", "/noAuth/**", "/api/v1/auth/**", "/api/v1/account/createAccount");
+        return (web) -> web.ignoring().requestMatchers(
+                "/swagger/**", "/swagger-ui/**", "/api-docs/**",
+                "/error", "/noAuth/**", "/api/v1/auth/**", "/api/v1/account/createAccount"
+        );
     }
 
     @Bean
