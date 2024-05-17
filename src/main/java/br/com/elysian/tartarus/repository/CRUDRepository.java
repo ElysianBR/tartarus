@@ -3,6 +3,7 @@ package br.com.elysian.tartarus.repository;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @NoRepositoryBean

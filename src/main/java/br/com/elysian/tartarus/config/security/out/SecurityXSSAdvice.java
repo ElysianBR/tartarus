@@ -1,6 +1,7 @@
-package br.com.elysian.tartarus.config.web;
+package br.com.elysian.tartarus.config.security.out;
 
 import br.com.elysian.tartarus.annotation.SecurityXSS;
+import br.com.elysian.tartarus.config.web.error.ErrorResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;

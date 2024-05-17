@@ -1,77 +1,126 @@
 package br.com.elysian.tartarus.service;
 
-import br.com.elysian.tartarus.dto.AuthDTO;
-import br.com.elysian.tartarus.model.User;
+import br.com.elysian.tartarus.dto.LoginDTO;
+import br.com.elysian.tartarus.dto.TokenDTO;
+import br.com.elysian.tartarus.model.Account;
+import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.repository.UserDAO;
 import br.com.elysian.tartarus.utils.JwtUtil;
-import br.com.elysian.tartarus.utils.StringUtils;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 @Service
 public class AuthService {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
     private final MessageService messageService;
     private final UserDAO userDAO;
+    private final JwtUtil jwtUtil;
+    @Getter
     private static final String TOKEN_PREFIX = "Bearer ";
+    @Getter
     private static final String HEADER_STRING = "Authorization";
+    @Getter
+    private static final String HEADER_EXPIRES_STRING = "ExpiresIn";
+
+    private String token;
 
 
     @Autowired
-    private AuthService(MessageService messageService, UserDAO userDAO) {
+    private AuthService(MessageService messageService, UserDAO userDAO, JwtUtil jwtUtil) {
         this.messageService = messageService;
         this.userDAO = userDAO;
+        this.jwtUtil = jwtUtil;
     }
 
 
-    public Authentication getAuthentication(HttpServletRequest request) {
-        String token = this.resolveToken(request);
-        String user = JwtUtil.extractUsername(token);
+    public Authentication getAuthentication(String token) {
+        try {
+            DecodedJWT decodedJWT = jwtUtil.getDecodedJWT(token);
 
-        if (user != null) {
-            // Verificar se além do usuário estar no JWT token, validar se o mesmo é válido e entre outras infromações.
-            return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+            String email = decodedJWT.getSubject();
+            String password = decodedJWT.getClaim("password").asString();
+
+            if (email != null && password != null) {
+                boolean existsAccount = userDAO.existsByEmailAndPassword(email, password);
+
+                if (existsAccount) {
+                    Account account = userDAO.findByEmailAndPassword(email, password);
+
+                    ArrayList<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+
+                    for (Role role : account.getAccountRoles()) {
+                        if (role.isActive()) grantedAuthorities.add(new SimpleGrantedAuthority(role.getId()));
+                    }
+
+                    return new UsernamePasswordAuthenticationToken(account.getId(), account.getPassword(), grantedAuthorities);
+                }
+            }
+
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
         }
 
-        throw new BadCredentialsException(messageService.getMessage("tartarus.invalid.bearer.token"));
-
+        throw new BadCredentialsException(messageService.getMessage("tartarus.authorization.header.invalid-bearer"));
     }
 
-    private String resolveToken(HttpServletRequest request) throws BadCredentialsException {
+
+    public String resolveToken(HttpServletRequest request) throws BadCredentialsException {
         String header = request.getHeader(HEADER_STRING);
 
         if (header == null) {
-            throw new BadCredentialsException(messageService.getMessage("tartarus.authorization.header.not.found"));
+            throw new BadCredentialsException(messageService.getMessage("tartarus.authorization.header.not-found"));
         }
 
         if (!header.startsWith(TOKEN_PREFIX)) {
-            throw new BadCredentialsException(messageService.getMessage("tartarus.invalid.bearer.token"));
+            throw new BadCredentialsException(messageService.getMessage("tartarus.authorization.header.invalid-bearer"));
         }
 
-        return header.replace(TOKEN_PREFIX, "");
+        return this.resolveAuthorizationHeader(header);
     }
 
 
-    public String getAuthorization(AuthDTO auth) throws UsernameNotFoundException {
-        User user = userDAO.findByUsernameOrEmailAndPassword(auth.getIdentity(), auth.getIdentity(), auth.getPassword());
+    public String resolveAuthorizationHeader(String authorization) {
+        return authorization.replace(TOKEN_PREFIX, "");
+    }
 
-        if (user != null) {
-            return JwtUtil.generateToken(user);
+
+    public TokenDTO getAuthorization(LoginDTO auth) throws UsernameNotFoundException {
+        Account account = userDAO.findByEmailAndPassword(auth.getEmail(), auth.getPassword());
+
+        if (account != null) {
+            return this.getAuthorization(account);
         }
 
+        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.validations.email.not-found"), auth.getEmail()));
+    }
 
-        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.user.or.mail.not.found"), auth.getIdentity()));
+
+    public TokenDTO getAuthorization(Account account) throws UsernameNotFoundException {
+        this.token = jwtUtil.generateToken(account);
+        DecodedJWT jwt = jwtUtil.getDecodedJWT(token);
+        return new TokenDTO(jwt.getExpiresAt(), jwt.getToken());
+    }
+
+
+    public void setHeaders(TokenDTO token, HttpServletResponse response) {
+        response.addHeader(HEADER_STRING, String.format("%s %s", TOKEN_PREFIX, token.getToken()));
+        response.addHeader(HEADER_EXPIRES_STRING, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(token.getExpiresIn()));
     }
 
 

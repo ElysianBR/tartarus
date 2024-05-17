@@ -1,1 +1,14 @@
-INSERT INTO "tartarus".users(ativo, cod_user, first_name, last_name, date_of_birth, email, username, password, role) VALUES (true, 1, 'William', 'Civa', to_date('05/10/2002', 'dd/mm/yyyy'), 'williamciva@elysian.com.br','williamciva', '123456789', 'admin');
+INSERT INTO "tartarus".role(id, description, active)
+VALUES ('ADMIN', 'admin group (warning)', TRUE);
+
+INSERT INTO "tartarus".role(id, description, active)
+VALUES ('ACCOUNT', 'a standard account', TRUE);
+
+INSERT INTO "tartarus".account(active, id, first_name, last_name, email, password)
+VALUES (true, 0, 'SUPER', 'ADMIN',  'super@admin.com.br', '123456789');
+
+INSERT INTO "tartarus".account_role(id_account, id_role) VALUES (0, 'ADMIN');
+
+INSERT INTO "tartarus".confirmation_type(id, description) VALUES (nextval('tartarus.confirmation_type_id_seq'), 'E-mail - Enable Account');
+
+INSERT INTO "tartarus".confirmation_type(id, description) VALUES (nextval('tartarus.confirmation_type_id_seq'), 'E-mail - 2F');

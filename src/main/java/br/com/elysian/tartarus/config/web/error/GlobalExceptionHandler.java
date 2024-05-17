@@ -1,19 +1,19 @@
-package br.com.elysian.tartarus.config.web;
+package br.com.elysian.tartarus.config.web.error;
 
 import br.com.elysian.tartarus.annotation.SecurityXSS;
+import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
 import br.com.elysian.tartarus.exception.ReCaptchaException;
 import br.com.elysian.tartarus.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-
-import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -43,18 +43,34 @@ public class GlobalExceptionHandler {
         if (fieldError != null) {
             message = String.format("( %s ) %s", fieldError.getField(), fieldError.getDefaultMessage());
         } else {
-            message = this.messageService.getMessage("tartarus.argument.not.valid");
+            message = this.messageService.getMessage("tartarus.validations.argument-not-valid");
         }
 
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND, message);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+
+    @SecurityXSS
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyRegistered(EmailAlreadyRegisteredException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.CONFLICT, ex);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+
+    @SecurityXSS
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED, ex);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
 
     @SecurityXSS
     @ExceptionHandler(ReCaptchaException.class)
-    public ResponseEntity<ErrorResponse> handleCaptchaException(ReCaptchaException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN, ex);
+    public ResponseEntity<ErrorResponse> handleCaptcha(ReCaptchaException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
 
