@@ -1,8 +1,7 @@
 package br.com.elysian.tartarus.model;
 
 import br.com.elysian.tartarus.dto.RegistrationDTO;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -31,20 +30,25 @@ public class Account {
     @JsonIgnore
     private Long id;
 
+
     @Column(name = "active")
     @ColumnDefault("false")
     private boolean active = false;
+
 
     @Length(max = 30)
     @Column(name = "first_name",  length = 30, nullable = false)
     private String firstName;
 
+
     @Length(max = 50)
     @Column(name = "last_name", length = 50, nullable = false)
     private String lastName;
 
+
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
+
 
     @Email
     @Column(name = "email", nullable = false, unique = true)
@@ -55,6 +59,7 @@ public class Account {
     @JsonIgnore
     private String password;
 
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "account_role",
@@ -63,16 +68,30 @@ public class Account {
     )
     private Set<Role> accountRoles;
 
-    //@JsonManagedReference
+
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "business_account",
+            joinColumns = @JoinColumn(name = "id_account"),
+            inverseJoinColumns = @JoinColumn(name = "id_business")
+    )
+    private Set<Business> business;
+
+
     @JsonIgnore
     @OneToMany(mappedBy = "account")
     private Set<Confirmation> confirmations;
 
+
     @JsonProperty
     public boolean isEnable() {
+        if (this.id == 0) {
+            return true;
+        }
+
         Optional<Confirmation> confirmation = this.getEnableConfirmation();
         return confirmation.filter(value -> value.getDateConfirmation() != null).isPresent();
-
     }
 
 

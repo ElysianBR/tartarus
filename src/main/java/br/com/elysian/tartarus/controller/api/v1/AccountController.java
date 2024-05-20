@@ -1,6 +1,5 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.annotation.SecurityXSS;
 import br.com.elysian.tartarus.dto.RegistrationDTO;
 import br.com.elysian.tartarus.dto.SuccessDTO;
 import br.com.elysian.tartarus.dto.TokenDTO;
@@ -43,7 +42,6 @@ public class AccountController {
     }
 
 
-    @SecurityXSS
     @PostMapping("/createAccount")
     public ResponseEntity<TokenDTO> registration(@Valid @RequestBody RegistrationDTO registrationDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException {
         if (!activeProfile.equals("dev")) {
@@ -59,24 +57,18 @@ public class AccountController {
     }
 
 
-    @Operation(
-            security = @SecurityRequirement(name = "bearerAuth")
-    )
-    @SecurityXSS
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/confirmAccount")
     public ResponseEntity<SuccessDTO> confirmAccount(@RequestParam("sequenceToken") String sequenceToken) {
         return ResponseEntity.ok(accountService.confirmAccount(sequenceToken));
     }
 
 
-    @Operation(
-            security = @SecurityRequirement(name = "bearerAuth")
-    )
-    @SecurityXSS
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
     @GetMapping("/accountLoggedIn")
     public ResponseEntity<Account> accountLoggedIn() {
-        return ResponseEntity.ok(accountService.getUserLogged());
+        return ResponseEntity.ok(accountService.getAccountLogged());
     }
 
 

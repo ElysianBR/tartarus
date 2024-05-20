@@ -1,26 +1,36 @@
 package br.com.elysian.tartarus.config.security;
 
 import br.com.elysian.tartarus.annotation.SecurityXSS;
-import br.com.elysian.tartarus.config.error.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import org.owasp.encoder.Encode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
-import org.owasp.encoder.Encode;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 @ControllerAdvice
 public class SecurityXSSAdvice implements ResponseBodyAdvice<Object> {
 
+    Logger logger = LoggerFactory.getLogger(SecurityXSSAdvice.class);
 
     @Override
     public boolean supports(MethodParameter returnType, Class converterType) {
         Method method = returnType.getMethod();
 
-        return method != null && method.isAnnotationPresent(SecurityXSS.class);
+        HttpServletRequest httpServletRequest = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
+        String xssSecurity = httpServletRequest.getHeader("X-XSS-Security");
+
+        return method != null && (method.isAnnotationPresent(SecurityXSS.class) || (xssSecurity != null && xssSecurity.equals("true")));
     }
 
 
@@ -29,18 +39,22 @@ public class SecurityXSSAdvice implements ResponseBodyAdvice<Object> {
                                   Class selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
 
 
-        if (body instanceof String && (selectedContentType.includes(MediaType.TEXT_PLAIN) || selectedContentType.includes(MediaType.APPLICATION_JSON))) {
+        if (body != null) {
+            Field[] bodyFields = body.getClass().getDeclaredFields();
 
-            return Encode.forHtml((String) body);
-
+            for (Field field : bodyFields) {
+                try {
+                    field.setAccessible(true);
+                    Object fieldValue = field.get(body);
+                    if (fieldValue instanceof String) {
+                        field.set(body, Encode.forHtml((String) fieldValue));
+                    }
+                } catch (IllegalAccessException e) {
+                    logger.warn("IllegalAccessException in HTML encode.", e);
+                }
+            }
         }
 
-        if (body instanceof ErrorResponse errorBody){
-
-            errorBody.setMessage(Encode.forHtml(errorBody.getMessage()));
-            errorBody.setError(Encode.forHtml(errorBody.getError()));
-
-        }
 
         return body;
     }

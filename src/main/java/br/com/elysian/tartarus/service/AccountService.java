@@ -61,7 +61,7 @@ public class AccountService {
 
 
     public SuccessDTO confirmAccount(String sequenceToken) {
-        Account account = this.getUserLogged();
+        Account account = this.getAccountLogged();
         Optional<Confirmation> optionalConfirmation = account.getEnableConfirmation();
         if (optionalConfirmation.isPresent()) {
 
@@ -76,12 +76,15 @@ public class AccountService {
 
                     confirmationMail.setDateConfirmation(new Date());
                     this.confirmationDAO.save(confirmationMail);
-                    account.setActive(true);
+
                     Set<Role> roles = account.getAccountRoles();
                     Role roleUser = roleDAO.findById("ACCOUNT").get();
                     roles.add(roleUser);
+
                     account.setAccountRoles(roles);
+                    account.setActive(true);
                     this.userDAO.save(account);
+
                     return new SuccessDTO(true, messageService.getMessage("tartarus.confirmation.accepted-token"));
 
                 } else {
@@ -97,15 +100,14 @@ public class AccountService {
     }
 
 
-    public Account getUserLogged() {
+    public Account getAccountLogged() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.isAuthenticated()) {
-            Long idUser = (Long) authentication.getPrincipal();
-            Optional<Account> user = userDAO.findById(idUser);
-            if (user.isPresent()) {
-                return user.get();
-            }
+        Long idUser = (Long) authentication.getPrincipal();
+
+        if (userDAO.existsById(idUser)) {
+            return userDAO.findById(idUser).get();
         }
+        
         return null;
     }
 }

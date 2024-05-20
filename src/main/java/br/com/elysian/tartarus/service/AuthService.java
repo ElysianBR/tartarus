@@ -101,10 +101,14 @@ public class AuthService {
 
 
     public TokenDTO getAuthorization(LoginDTO auth) throws UsernameNotFoundException {
-        Account account = userDAO.findByEmailAndPassword(auth.getEmail(), auth.getPassword());
 
-        if (account != null) {
+
+
+        if (userDAO.existsByEmailAndPassword(auth.getEmail(), auth.getPassword())) {
+
+            Account account = userDAO.findByEmailAndPassword(auth.getEmail(), auth.getPassword());
             return this.getAuthorization(account);
+
         }
 
         throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.validations.email.not-found"), auth.getEmail()));

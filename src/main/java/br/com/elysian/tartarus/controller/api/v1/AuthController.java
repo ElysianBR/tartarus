@@ -1,6 +1,5 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.annotation.SecurityXSS;
 import br.com.elysian.tartarus.dto.LoginDTO;
 import br.com.elysian.tartarus.dto.TokenDTO;
 import br.com.elysian.tartarus.service.AuthService;
@@ -8,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +26,6 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @SecurityXSS
     @PostMapping("/login")
     public ResponseEntity<TokenDTO> login(@Valid @RequestBody LoginDTO auth, HttpServletResponse response) {
         TokenDTO token = authService.getAuthorization(auth);
