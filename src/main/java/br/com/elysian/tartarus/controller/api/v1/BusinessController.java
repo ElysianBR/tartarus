@@ -1,7 +1,6 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.dto.BusinessDTO;
-import br.com.elysian.tartarus.model.Account;
+import br.com.elysian.tartarus.dto.v1.BusinessDTO;
 import br.com.elysian.tartarus.model.Business;
 import br.com.elysian.tartarus.service.BusinessService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 @Transactional
 @RestController
@@ -23,16 +23,27 @@ public class BusinessController {
 
     private final BusinessService businessService;
 
-    public BusinessController(BusinessService businessService){
+    public BusinessController(BusinessService businessService) {
         this.businessService = businessService;
     }
 
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
-    @GetMapping("/registeredBusiness")
-    public ResponseEntity<ArrayList<BusinessDTO>> registeredBusiness(@Param("activeOnly") boolean activeOnly) {
-        return ResponseEntity.ok(businessService.getBusinessFromAccountLogged(activeOnly));
+    @GetMapping("/getBusiness")
+    public ResponseEntity<ArrayList<BusinessDTO>> getBusiness() {
+        Set<Business> businessSet = businessService.getBusinessFromAccount();
+
+        ArrayList<BusinessDTO> businessDTOs = new ArrayList<>();
+        businessSet.forEach(business -> {
+            if (business.isActive()) {
+                businessDTOs.add(new BusinessDTO(business));
+            }
+        });
+
+        return ResponseEntity.ok(businessDTOs);
+
     }
+
 
 }

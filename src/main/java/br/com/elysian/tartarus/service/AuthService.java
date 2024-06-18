@@ -1,7 +1,7 @@
 package br.com.elysian.tartarus.service;
 
-import br.com.elysian.tartarus.dto.LoginDTO;
-import br.com.elysian.tartarus.dto.TokenDTO;
+import br.com.elysian.tartarus.dto.v1.LoginDTO;
+import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.repository.UserDAO;
@@ -111,7 +111,7 @@ public class AuthService {
 
         }
 
-        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.validations.email.not-found"), auth.getEmail()));
+        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.validations.email.password.not-valid"), auth.getEmail()));
     }
 
 

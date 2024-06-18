@@ -1,6 +1,6 @@
 package br.com.elysian.tartarus.model;
 
-import br.com.elysian.tartarus.dto.RegistrationDTO;
+import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -12,6 +12,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,7 +28,6 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "id_account", sequenceName = "account_id_seq", schema = "tartarus")
     @Column(name = "id")
-    @JsonIgnore
     private Long id;
 
 
@@ -69,7 +69,6 @@ public class Account {
     private Set<Role> accountRoles;
 
 
-    @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "business_account",
@@ -79,12 +78,10 @@ public class Account {
     private Set<Business> business;
 
 
-    @JsonIgnore
     @OneToMany(mappedBy = "account")
     private Set<Confirmation> confirmations;
 
 
-    @JsonProperty
     public boolean isEnable() {
         if (this.id == 0) {
             return true;
@@ -95,7 +92,6 @@ public class Account {
     }
 
 
-    @JsonIgnore
     public Optional<Confirmation> getEnableConfirmation() {
         for (Confirmation confirmation : confirmations) {
             if (confirmation.getType().getId() == 1) {
@@ -103,6 +99,16 @@ public class Account {
             }
         }
         return Optional.empty();
+    }
+
+    public Set<Role> getActiveRoles() {
+        Set<Role> roles = new HashSet<>();
+        for (Role role : this.accountRoles){
+            if (role.isActive()) {
+                roles.add(role);
+            }
+        }
+        return roles;
     }
 
 

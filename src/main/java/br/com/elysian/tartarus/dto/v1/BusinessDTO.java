@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.dto;
+package br.com.elysian.tartarus.dto.v1;
 
 import br.com.elysian.tartarus.model.Business;
 import lombok.AllArgsConstructor;

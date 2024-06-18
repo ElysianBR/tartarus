@@ -1,7 +1,7 @@
 package br.com.elysian.tartarus.service;
 
-import br.com.elysian.tartarus.dto.RegistrationDTO;
-import br.com.elysian.tartarus.dto.SuccessDTO;
+import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
+import br.com.elysian.tartarus.dto.v1.SuccessDTO;
 import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Confirmation;

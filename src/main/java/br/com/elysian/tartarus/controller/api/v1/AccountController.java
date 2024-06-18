@@ -1,8 +1,9 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.dto.RegistrationDTO;
-import br.com.elysian.tartarus.dto.SuccessDTO;
-import br.com.elysian.tartarus.dto.TokenDTO;
+import br.com.elysian.tartarus.dto.v1.AccountLoggedInDTO;
+import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
+import br.com.elysian.tartarus.dto.v1.SuccessDTO;
+import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
 import br.com.elysian.tartarus.exception.ReCaptchaException;
 import br.com.elysian.tartarus.model.Account;
@@ -60,15 +61,21 @@ public class AccountController {
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/confirmAccount")
     public ResponseEntity<SuccessDTO> confirmAccount(@RequestParam("sequenceToken") String sequenceToken) {
-        return ResponseEntity.ok(accountService.confirmAccount(sequenceToken));
+        return ResponseEntity.ok(
+                accountService.confirmAccount(sequenceToken)
+        );
     }
 
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
-    @GetMapping("/accountLoggedIn")
-    public ResponseEntity<Account> accountLoggedIn() {
-        return ResponseEntity.ok(accountService.getAccountLogged());
+    @GetMapping("/getAccount")
+    public ResponseEntity<AccountLoggedInDTO> getAccount() {
+        return ResponseEntity.ok(
+                new AccountLoggedInDTO(
+                        accountService.getAccountLogged()
+                )
+        );
     }
 
 

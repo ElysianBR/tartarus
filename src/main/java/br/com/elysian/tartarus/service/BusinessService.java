@@ -1,6 +1,6 @@
 package br.com.elysian.tartarus.service;
 
-import br.com.elysian.tartarus.dto.BusinessDTO;
+import br.com.elysian.tartarus.dto.v1.BusinessDTO;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Business;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,20 +20,9 @@ public class BusinessService {
     }
 
 
-    public ArrayList<BusinessDTO> getBusinessFromAccountLogged(boolean activeOnly) {
+    public Set<Business> getBusinessFromAccount() {
         Account account = accountService.getAccountLogged();
-        Set<Business> businessSet = account.getBusiness();
-
-        ArrayList<BusinessDTO> businessDTOs = new ArrayList<>();
-
-        businessSet.forEach(business -> {
-            if (!activeOnly || business.isActive()) {
-                businessDTOs.add(new BusinessDTO(business));
-            }
-        });
-
-
-        return businessDTOs;
+        return account.getBusiness();
     }
 
 }
