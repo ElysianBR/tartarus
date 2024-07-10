@@ -71,11 +71,11 @@ public class Account {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "business_account",
+            name = "company_account",
             joinColumns = @JoinColumn(name = "id_account"),
-            inverseJoinColumns = @JoinColumn(name = "id_business")
+            inverseJoinColumns = @JoinColumn(name = "id_company")
     )
-    private Set<Business> business;
+    private Set<Company> companies;
 
 
     @OneToMany(mappedBy = "account")

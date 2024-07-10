@@ -1,0 +1,66 @@
+spring:
+    application:
+        name: tartarus
+
+    datasource:
+        driver-class-name: org.postgresql.Driver
+
+    jpa:
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        defer-datasource-initialization: true
+        hibernate:
+            ddl-auto: validate
+        properties:
+            hibernate:
+                default_schema: tartarus
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+
+    messages:
+        basename: messages/messages
+
+    sql:
+        init:
+            data-locations: classpath:sql/data.sql
+            platform: postgresql
+            schema-locations: classpath:sql/schema-postgresql.sql
+
+
+tartatus:
+    jwt:
+        secret: KC7M1U0fqf8gMb7w53lna8LUr5rd
+        expiration-time: 14400000  #4 hours
+
+
+google:
+    recaptcha:
+        key:
+            secret: 6LeCGMApAAAAAItTQLgjEX61xnekmU2B3TkFMRCZ
+            site: 6LeCGMApAAAAABXtvwasSa9Aw3oy9xSiIg7YsWSC
+
+
+# Enable actuactor for swagger api
+#management:
+#    endpoints:
+#        web:
+#            exposure:
+#                include: openapi, swagger-ui
+
+
+server:
+    servlet:
+        encoding:
+            charset: UTF-8
+            enabled: true
+            force: true
+
+
+springdoc:
+    api-docs:
+        enabled: true
+        path: /api-docs
+
+    swagger-ui:
+        enabled: true
+        operationsSorter: method
+        path: /swagger
+#    show-actuator: false

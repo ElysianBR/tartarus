@@ -1,11 +1,13 @@
 package br.com.elysian.tartarus.service;
 
+import br.com.elysian.tartarus.config.security.AuthenticationAccount;
 import br.com.elysian.tartarus.dto.v1.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.repository.UserDAO;
-import br.com.elysian.tartarus.utils.JwtUtil;
+import br.com.elysian.tartarus.service.jwt.JwtUtil;
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,7 +37,7 @@ public class AuthService {
     @Getter
     private static final String HEADER_STRING = "Authorization";
     @Getter
-    private static final String HEADER_EXPIRES_STRING = "ExpiresIn";
+    private static final String HEADER_EXPIRES_STRING = "X-Expires";
 
     private String token;
 
@@ -49,7 +50,7 @@ public class AuthService {
     }
 
 
-    public Authentication getAuthentication(String token) {
+    public AuthenticationAccount getAuthentication(String token) {
         try {
             DecodedJWT decodedJWT = jwtUtil.getDecodedJWT(token);
 
@@ -68,7 +69,18 @@ public class AuthService {
                         if (role.isActive()) grantedAuthorities.add(new SimpleGrantedAuthority(role.getId()));
                     }
 
-                    return new UsernamePasswordAuthenticationToken(account.getId(), account.getPassword(), grantedAuthorities);
+
+                    Claim idCompanyClaim = decodedJWT.getClaim("idCompanie");
+                    Long idCompanie = null;
+                    if (!idCompanyClaim.isNull()) idCompanie = decodedJWT.getClaim("idCompanie").asLong();
+
+
+                    return new AuthenticationAccount(
+                            account.getId(),
+                            account.getPassword(),
+                            grantedAuthorities,
+                            idCompanie
+                    );
                 }
             }
 
@@ -101,7 +113,6 @@ public class AuthService {
 
 
     public TokenDTO getAuthorization(LoginDTO auth) throws UsernameNotFoundException {
-
 
 
         if (userDAO.existsByEmailAndPassword(auth.getEmail(), auth.getPassword())) {

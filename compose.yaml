@@ -1,6 +1,6 @@
 services:
-  tartarus-server:
-    container_name: tartarus-server
+  spring-service:
+    container_name: spring-service
     build:
       context: .
       dockerfile: Dockerfile

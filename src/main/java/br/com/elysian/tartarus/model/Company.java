@@ -15,12 +15,12 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(schema = "tartarus", name = "business")
-public class Business {
+@Table(schema = "tartarus", name = "company")
+public class Company {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "id_business", sequenceName = "business_id_seq", schema = "tartarus")
+    @SequenceGenerator(name = "id_company", sequenceName = "company_id_seq", schema = "tartarus")
     @Column(name = "id")
     private Long id;
 
@@ -41,10 +41,10 @@ public class Business {
     @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "business_account",
-            joinColumns = @JoinColumn(name = "id_business"),
+            name = "company_account",
+            joinColumns = @JoinColumn(name = "id_company"),
             inverseJoinColumns = @JoinColumn(name = "id_account")
     )
-    private Set<Account> accountsBusiness;
+    private Set<Account> accountsCompany;
 
 }

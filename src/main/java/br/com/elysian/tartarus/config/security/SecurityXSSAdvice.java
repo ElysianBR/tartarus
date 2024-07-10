@@ -1,12 +1,15 @@
 package br.com.elysian.tartarus.config.security;
 
 import br.com.elysian.tartarus.annotation.SecurityXSS;
+import br.com.elysian.tartarus.config.error.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.owasp.encoder.Encode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -15,7 +18,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Objects;
 
 @ControllerAdvice
@@ -39,6 +45,19 @@ public class SecurityXSSAdvice implements ResponseBodyAdvice<Object> {
                                   Class selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
 
 
+        if (body instanceof Collection<?>) {
+            ArrayList<Object> c = new ArrayList<>();
+            for (Object b : (Collection<?>) body) {
+                c.add(this.convertBody(b));
+            }
+            return c;
+        }
+
+        return this.convertBody(body);
+    }
+
+
+    private Object convertBody(Object body) {
         if (body != null) {
             Field[] bodyFields = body.getClass().getDeclaredFields();
 

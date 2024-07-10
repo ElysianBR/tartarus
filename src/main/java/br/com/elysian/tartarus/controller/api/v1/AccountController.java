@@ -44,7 +44,7 @@ public class AccountController {
 
 
     @PostMapping("/createAccount")
-    public ResponseEntity<TokenDTO> registration(@Valid @RequestBody RegistrationDTO registrationDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException {
+    public ResponseEntity<TokenDTO> createAccount(@Valid @RequestBody RegistrationDTO registrationDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);

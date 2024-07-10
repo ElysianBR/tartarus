@@ -29,7 +29,7 @@ public class AuthenticationFilter extends GenericFilterBean {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException {
         try {
             String token = this.authService.resolveToken((HttpServletRequest) request);
-            Authentication authentication = authService.getAuthentication(token);
+            AuthenticationAccount authentication = authService.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             filterChain.doFilter(request, response);

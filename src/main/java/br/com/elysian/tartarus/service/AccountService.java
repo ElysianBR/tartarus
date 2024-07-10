@@ -1,5 +1,6 @@
 package br.com.elysian.tartarus.service;
 
+import br.com.elysian.tartarus.config.security.AuthenticationAccount;
 import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
 import br.com.elysian.tartarus.dto.v1.SuccessDTO;
 import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
@@ -101,7 +102,7 @@ public class AccountService {
 
 
     public Account getAccountLogged() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AuthenticationAccount authentication = (AuthenticationAccount) SecurityContextHolder.getContext().getAuthentication();
         Long idUser = (Long) authentication.getPrincipal();
 
         if (userDAO.existsById(idUser)) {

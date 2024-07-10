@@ -31,7 +31,7 @@ public class WebSecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
                 "/swagger/**", "/swagger-ui/**", "/api-docs/**",
-                "/error", "/noAuth/**", "/api/v1/auth/**", "/api/v1/account/createAccount"
+                "/error", "/api/v1/auth/**", "/api/v1/account/createAccount"
         );
     }
 

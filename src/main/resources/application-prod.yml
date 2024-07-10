@@ -1,0 +1,21 @@
+spring:
+    datasource:
+        password:
+        url:
+        username:
+
+    mail:
+        host:
+        password:
+        port:
+        properties:
+            mail:
+                smtp:
+                    auth:
+                    starttls:
+                        enable:
+        username:
+
+    sql:
+        init:
+            continue-on-error: false
