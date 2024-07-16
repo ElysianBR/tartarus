@@ -1,6 +1,7 @@
 package br.com.elysian.tartarus.service;
 
-import br.com.elysian.tartarus.config.security.AuthenticationAccount;
+import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
+import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Company;
 import br.com.elysian.tartarus.repository.CompanyDAO;
@@ -14,11 +15,13 @@ import java.util.Set;
 public class CompanyService {
 
     private final AccountService accountService;
+    private final AuthService authService;
     private final CompanyDAO companyDAO;
 
     @Autowired
-    public CompanyService(AccountService accountService, CompanyDAO companyDAO) {
+    public CompanyService(AccountService accountService, AuthService authService, CompanyDAO companyDAO) {
         this.accountService = accountService;
+        this.authService = authService;
         this.companyDAO = companyDAO;
     }
 
@@ -29,12 +32,12 @@ public class CompanyService {
     }
 
     public Company getCompanyLoggedIn() {
-        AuthenticationAccount authentication = (AuthenticationAccount) SecurityContextHolder.getContext().getAuthentication();
-        Long idCompany = authentication.getIdCompany();
+        AuthenticationAccount authentication = authService.getCurrentAuthentication();
+        Long companyId = ((CredentialAccount) authentication.getCredentials()).getCompanyId();
 
-        if (idCompany != null) {
-            if (companyDAO.existsById(idCompany)) {
-                return companyDAO.findById(idCompany).get();
+        if (companyId != null) {
+            if (companyDAO.existsById(companyId)) {
+                return companyDAO.findById(companyId).get();
             }
         }
 

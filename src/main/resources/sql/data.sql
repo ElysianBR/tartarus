@@ -5,7 +5,7 @@ INSERT INTO "tartarus".role(id, description, active)
 SELECT 'ACCOUNT', 'a standard account', TRUE WHERE NOT EXISTS (SELECT 1 FROM "tartarus".role WHERE id = 'ACCOUNT');
 
 INSERT INTO "tartarus".account(active, id, first_name, last_name, email, password)
-SELECT true, 0, 'SUPER', 'ADMIN',  'super@admin.com.br', '123456789' WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account WHERE id = 0);
+SELECT true, 0, 'SUPER', 'ADMIN',  'super@admin.com.br', '$2a$12$zgVwfmDvwtKiZzEbWwqH/eHmXtO1t8iqvIn7MRpL/LQ1Du8sB5frS' WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account WHERE id = 0);
 
 INSERT INTO "tartarus".company(active,  cnpj, company_name)
 SELECT TRUE, '233242/000135', 'company for development' WHERE NOT EXISTS (SELECT 1 FROM "tartarus".company WHERE cnpj = '233242/000135');

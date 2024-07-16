@@ -1,6 +1,6 @@
 package br.com.elysian.tartarus.service;
 
-import br.com.elysian.tartarus.config.security.AuthenticationAccount;
+import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
 import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
 import br.com.elysian.tartarus.dto.v1.SuccessDTO;
 import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
@@ -13,8 +13,6 @@ import br.com.elysian.tartarus.repository.ConfirmationTypeDAO;
 import br.com.elysian.tartarus.repository.RoleDAO;
 import br.com.elysian.tartarus.repository.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -25,6 +23,7 @@ import java.util.Set;
 public class AccountService {
 
     private final MessageService messageService;
+    private final AuthService authService;
     private final UserDAO userDAO;
     private final RoleDAO roleDAO;
     private final ConfirmationDAO confirmationDAO;
@@ -32,8 +31,9 @@ public class AccountService {
 
 
     @Autowired
-    public AccountService(MessageService messageService, UserDAO userDAO, RoleDAO roleDAO, ConfirmationDAO confirmationMailRep, ConfirmationTypeDAO confirmationTypeDAO) {
+    public AccountService(MessageService messageService, AuthService authService, UserDAO userDAO, RoleDAO roleDAO, ConfirmationDAO confirmationMailRep, ConfirmationTypeDAO confirmationTypeDAO) {
         this.messageService = messageService;
+        this.authService = authService;
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.confirmationDAO = confirmationMailRep;
@@ -44,6 +44,7 @@ public class AccountService {
         if (userDAO.existsByEmail(registrationDTO.getEmail())) {
             throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email.already-registered"), registrationDTO.getEmail()));
         }
+
 
         Account account = userDAO.save(new Account(registrationDTO));
         ConfirmationType confirmationType = confirmationTypeDAO.findById(1).get();
@@ -102,7 +103,7 @@ public class AccountService {
 
 
     public Account getAccountLogged() {
-        AuthenticationAccount authentication = (AuthenticationAccount) SecurityContextHolder.getContext().getAuthentication();
+        AuthenticationAccount authentication = authService.getCurrentAuthentication();
         Long idUser = (Long) authentication.getPrincipal();
 
         if (userDAO.existsById(idUser)) {

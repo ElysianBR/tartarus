@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.config.security;
+package br.com.elysian.tartarus.config.security.authentication;
 
 import br.com.elysian.tartarus.config.error.ErrorResponse;
 import br.com.elysian.tartarus.service.AuthService;
@@ -9,8 +9,6 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
@@ -30,7 +28,7 @@ public class AuthenticationFilter extends GenericFilterBean {
         try {
             String token = this.authService.resolveToken((HttpServletRequest) request);
             AuthenticationAccount authentication = authService.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            authService.setCurrentAuthentication(authentication);
 
             filterChain.doFilter(request, response);
         } catch (Exception exp) {

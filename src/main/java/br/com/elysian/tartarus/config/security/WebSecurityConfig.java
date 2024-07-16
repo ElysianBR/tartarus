@@ -1,5 +1,6 @@
 package br.com.elysian.tartarus.config.security;
 
+import br.com.elysian.tartarus.config.security.authentication.AuthenticationFilter;
 import br.com.elysian.tartarus.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

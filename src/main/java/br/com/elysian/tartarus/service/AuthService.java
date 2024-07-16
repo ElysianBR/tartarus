@@ -1,12 +1,15 @@
 package br.com.elysian.tartarus.service;
 
-import br.com.elysian.tartarus.config.security.AuthenticationAccount;
+import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
+import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
 import br.com.elysian.tartarus.dto.v1.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.repository.UserDAO;
-import br.com.elysian.tartarus.service.jwt.JwtUtil;
+import br.com.elysian.tartarus.service.jwt.JwtBuilder;
+import br.com.elysian.tartarus.service.jwt.JwtService;
+import br.com.elysian.tartarus.utils.PasswordUtils;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,15 +18,18 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Map;
 
 @Service
 public class AuthService {
@@ -31,7 +37,7 @@ public class AuthService {
     private final static Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
     private final MessageService messageService;
     private final UserDAO userDAO;
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     @Getter
     private static final String TOKEN_PREFIX = "Bearer ";
     @Getter
@@ -43,44 +49,61 @@ public class AuthService {
 
 
     @Autowired
-    private AuthService(MessageService messageService, UserDAO userDAO, JwtUtil jwtUtil) {
+    private AuthService(MessageService messageService, UserDAO userDAO, JwtService jwtUtil) {
         this.messageService = messageService;
         this.userDAO = userDAO;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtUtil;
     }
 
+    public AuthenticationAccount getCurrentAuthentication() {
+        return (AuthenticationAccount) SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    public void setCurrentAuthentication(Authentication authentication) {
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
 
     public AuthenticationAccount getAuthentication(String token) {
         try {
-            DecodedJWT decodedJWT = jwtUtil.getDecodedJWT(token);
+            DecodedJWT decodedJWT = jwtService.getDecodedJWT(token);
 
             String email = decodedJWT.getSubject();
             String password = decodedJWT.getClaim("password").asString();
 
             if (email != null && password != null) {
-                boolean existsAccount = userDAO.existsByEmailAndPassword(email, password);
+                boolean existsAccount = userDAO.existsByEmail(email);
 
                 if (existsAccount) {
-                    Account account = userDAO.findByEmailAndPassword(email, password);
 
-                    ArrayList<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+                    Account account = userDAO.findByEmail(email);
 
-                    for (Role role : account.getAccountRoles()) {
-                        if (role.isActive()) grantedAuthorities.add(new SimpleGrantedAuthority(role.getId()));
+                    String passwordAccount = account.getPassword();
+
+                    if (PasswordUtils.verifyPassword(password, passwordAccount)) {
+
+                        ArrayList<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+
+                        for (Role role : account.getAccountRoles()) {
+                            if (role.isActive()) grantedAuthorities.add(new SimpleGrantedAuthority(role.getId()));
+                        }
+
+
+                        CredentialAccount credential = new CredentialAccount(
+                                account
+                        );
+
+
+                        Map<String, Claim> claims = decodedJWT.getClaims();
+                        credential.setClaims(claims);
+
+
+                        return new AuthenticationAccount(
+                                account.getId(),
+                                credential,
+                                grantedAuthorities
+                        );
+
                     }
-
-
-                    Claim idCompanyClaim = decodedJWT.getClaim("idCompanie");
-                    Long idCompanie = null;
-                    if (!idCompanyClaim.isNull()) idCompanie = decodedJWT.getClaim("idCompanie").asLong();
-
-
-                    return new AuthenticationAccount(
-                            account.getId(),
-                            account.getPassword(),
-                            grantedAuthorities,
-                            idCompanie
-                    );
                 }
             }
 
@@ -113,13 +136,13 @@ public class AuthService {
 
 
     public TokenDTO getAuthorization(LoginDTO auth) throws UsernameNotFoundException {
+        if (userDAO.existsByEmail(auth.getEmail())) {
 
+            Account account = userDAO.findByEmail(auth.getEmail());
 
-        if (userDAO.existsByEmailAndPassword(auth.getEmail(), auth.getPassword())) {
-
-            Account account = userDAO.findByEmailAndPassword(auth.getEmail(), auth.getPassword());
-            return this.getAuthorization(account);
-
+            if (PasswordUtils.verifyPassword(auth.getPassword(), account.getPassword())) {
+                return this.getAuthorization(account);
+            }
         }
 
         throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.validations.email.password.not-valid"), auth.getEmail()));
@@ -127,9 +150,33 @@ public class AuthService {
 
 
     public TokenDTO getAuthorization(Account account) throws UsernameNotFoundException {
-        this.token = jwtUtil.generateToken(account);
-        DecodedJWT jwt = jwtUtil.getDecodedJWT(token);
+        JwtBuilder builder = jwtService.getBuilder(account);
+        this.token = jwtService.sign(builder);
+
+        DecodedJWT jwt = jwtService.getDecodedJWT(token);
         return new TokenDTO(jwt.getExpiresAt(), jwt.getToken());
+    }
+
+
+    public TokenDTO getAuthorizationByCurrentAuthentication() throws UsernameNotFoundException {
+        AuthenticationAccount auth = this.getCurrentAuthentication();
+
+        Long idUser = (Long) auth.getPrincipal();
+
+        if (userDAO.existsById(idUser)) {
+            Account account = userDAO.findById(idUser).get();
+
+            JwtBuilder builder = jwtService.getBuilder(account);
+            CredentialAccount credential = (CredentialAccount) auth.getCredentials();
+            builder.setCompanyId(credential.getCompanyId());
+
+            this.token = jwtService.sign(builder);
+
+            DecodedJWT jwt = jwtService.getDecodedJWT(token);
+            return new TokenDTO(jwt.getExpiresAt(), jwt.getToken());
+        }
+
+        throw new AuthenticationServiceException("This authentication is not belonging to a valid account.");
     }
 
 

@@ -1,6 +1,7 @@
 package br.com.elysian.tartarus.model;
 
 import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
+import br.com.elysian.tartarus.utils.PasswordUtils;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -116,6 +117,6 @@ public class Account {
         this.firstName = registrationDTO.getFirstName();
         this.lastName = registrationDTO.getLastName();
         this.email = registrationDTO.getEmail();
-        this.password = registrationDTO.getPassword();
+        this.password = PasswordUtils.hashPassword(registrationDTO.getPassword());
     }
 }

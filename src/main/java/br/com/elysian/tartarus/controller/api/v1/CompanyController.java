@@ -1,18 +1,21 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
+import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
+import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
 import br.com.elysian.tartarus.dto.v1.CompanyDTO;
+import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.model.Company;
+import br.com.elysian.tartarus.model.util.EntityInfo;
+import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.CompanyService;
 import br.com.elysian.tartarus.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.security.auth.login.CredentialException;
 import java.util.ArrayList;
@@ -25,18 +28,25 @@ public class CompanyController {
 
     private final CompanyService companyService;
     private final MessageService messageService;
+    private final AuthService authService;
 
-    public CompanyController(CompanyService companyService, MessageService messageService) {
+    public CompanyController(CompanyService companyService, MessageService messageService, AuthService authService, EntityInfo entityInfo) {
         this.companyService = companyService;
         this.messageService = messageService;
+        this.authService = authService;
     }
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
-    @GetMapping("/loggin")
-    public ResponseEntity<String> loggin(@RequestParam("idComapany") Long idCompany) {
-//        TODO: Implements Login Company, set JWT, Authorization e etc...
-        return ResponseEntity.ok("");
+    @PostMapping("/swith")
+    public ResponseEntity<TokenDTO> swith(@RequestParam("companyId") Long companyId, HttpServletResponse response) {
+        AuthenticationAccount authenticationAccount = authService.getCurrentAuthentication();
+        ((CredentialAccount) authenticationAccount.getCredentials()).setCompanyId(companyId);
+
+        TokenDTO token = authService.getAuthorizationByCurrentAuthentication();
+        authService.setHeaders(token, response);
+
+        return ResponseEntity.ok(token);
     }
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
