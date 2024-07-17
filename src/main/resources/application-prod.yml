@@ -15,7 +15,3 @@ spring:
                     starttls:
                         enable:
         username:
-
-    sql:
-        init:
-            continue-on-error: false
