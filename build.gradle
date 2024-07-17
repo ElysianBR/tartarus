@@ -59,13 +59,13 @@ tasks.named('asciidoctor') {
 }
 
 // Create a jar tartarus.jar from current version
-//tasks.register('copyJar', Copy) {
-//    dependsOn 'build'
-//    from 'build/libs'
-//    include "${project.name}-${project.version}.jar"
-//    into 'build/libs'
-//    rename "${project.name}-${project.version}.jar", 'tartarus.jar'
-//}
-//tasks.named('build') {
-//    finalizedBy 'copyJar'
-//}
+tasks.register('copyJar', Copy) {
+    dependsOn 'build'
+    from 'build/libs'
+    include "${project.name}-${project.version}.jar"
+    into 'build/libs'
+    rename "${project.name}-${project.version}.jar", 'tartarus.jar'
+}
+tasks.named('build') {
+    finalizedBy 'copyJar'
+}
