@@ -3,11 +3,3 @@ spring:
         password: TARTARUS
         url: jdbc:postgresql://db:5432/TARTARUS
         username: TARTARUS
-
-    jpa:
-        hibernate:
-            ddl-auto: update
-
-    sql:
-        init:
-            mode: always
