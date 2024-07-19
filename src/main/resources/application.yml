@@ -23,6 +23,7 @@ spring:
             data-locations: classpath:sql/data.sql
             platform: postgresql
             schema-locations: classpath:sql/schema-postgresql.sql
+            mode: always
 
 
 tartatus:
