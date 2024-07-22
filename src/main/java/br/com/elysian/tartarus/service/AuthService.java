@@ -45,7 +45,7 @@ public class AuthService {
     @Getter
     private static final String HEADER_EXPIRES_STRING = "X-Expires";
 
-    private String token;
+    private String jwtToken;
 
 
     @Autowired
@@ -63,9 +63,9 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
-    public AuthenticationAccount getAuthentication(String token) {
+    public AuthenticationAccount getAuthentication(String jwtToken) {
         try {
-            DecodedJWT decodedJWT = jwtService.getDecodedJWT(token);
+            DecodedJWT decodedJWT = jwtService.getDecodedJWT(jwtToken);
 
             String email = decodedJWT.getSubject();
             String password = decodedJWT.getClaim("password").asString();
@@ -79,7 +79,7 @@ public class AuthService {
 
                     String passwordAccount = account.getPassword();
 
-                    if (PasswordUtils.verifyPassword(password, passwordAccount)) {
+                    if (passwordAccount.equals(password)) {
 
                         ArrayList<GrantedAuthority> grantedAuthorities = new ArrayList<>();
 
@@ -151,9 +151,9 @@ public class AuthService {
 
     public TokenDTO getAuthorization(Account account) throws UsernameNotFoundException {
         JwtBuilder builder = jwtService.getBuilder(account);
-        this.token = jwtService.sign(builder);
+        this.jwtToken = jwtService.sign(builder);
 
-        DecodedJWT jwt = jwtService.getDecodedJWT(token);
+        DecodedJWT jwt = jwtService.getDecodedJWT(jwtToken);
         return new TokenDTO(jwt.getExpiresAt(), jwt.getToken());
     }
 
@@ -170,9 +170,9 @@ public class AuthService {
             CredentialAccount credential = (CredentialAccount) auth.getCredentials();
             builder.setCompanyId(credential.getCompanyId());
 
-            this.token = jwtService.sign(builder);
+            this.jwtToken = jwtService.sign(builder);
 
-            DecodedJWT jwt = jwtService.getDecodedJWT(token);
+            DecodedJWT jwt = jwtService.getDecodedJWT(jwtToken);
             return new TokenDTO(jwt.getExpiresAt(), jwt.getToken());
         }
 
@@ -180,9 +180,9 @@ public class AuthService {
     }
 
 
-    public void setHeaders(TokenDTO token, HttpServletResponse response) {
-        response.addHeader(HEADER_STRING, String.format("%s %s", TOKEN_PREFIX, token.getToken()));
-        response.addHeader(HEADER_EXPIRES_STRING, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(token.getExpiresIn()));
+    public void setHeaders(TokenDTO jwtToken, HttpServletResponse response) {
+        response.addHeader(HEADER_STRING, String.format("%s %s", TOKEN_PREFIX, jwtToken.getToken()));
+        response.addHeader(HEADER_EXPIRES_STRING, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(jwtToken.getExpiresIn()));
     }
 
 
