@@ -51,8 +51,6 @@ public class BlockchainService {
         Blockchain blockchain = this.getBlockchainByTag(blockchainTag);
         Company company = companyService.getCompanyLoggedIn();
 
-        System.out.println("blockchain="+blockchain+" company="+company);
-
         if (company != null && blockchain != null) {
             CompanyBlockchainPK companyBlockchainPKpk = new CompanyBlockchainPK(company, blockchain);
             if (companyBlockchainDAO.existsById(companyBlockchainPKpk)) {

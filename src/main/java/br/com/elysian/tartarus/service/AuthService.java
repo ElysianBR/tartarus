@@ -169,9 +169,7 @@ public class AuthService {
             JwtBuilder builder = jwtService.getBuilder(account);
             CredentialAccount credential = (CredentialAccount) auth.getCredentials();
 
-            // TODO: Melhoria na contrução a classe builder de JWT, para que a mesma pegue os "clains" da autentificação e set automaticamente nos claims do JWT...
-            builder.setCompanyId(credential.getCompanyId());
-            builder.setBlochchainTag(credential.getBlockchainTag());
+            builder.addCredentialsAsClaim(credential);
 
             this.jwtToken = jwtService.sign(builder);
 
