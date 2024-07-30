@@ -40,6 +40,7 @@ public class CompanyController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
     @PostMapping("/swith")
     public ResponseEntity<TokenDTO> swith(@RequestParam("companyId") Long companyId, HttpServletResponse response) {
+        // TODO: Implementar camada de seguranaça para fazer o set da credencial DENTREO do AuthService ou CompanyService, fazendo a validação se de fato o usuário possui acesso a emrpesa.
         AuthenticationAccount authenticationAccount = authService.getCurrentAuthentication();
         ((CredentialAccount) authenticationAccount.getCredentials()).setCompanyId(companyId);
 

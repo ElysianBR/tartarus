@@ -20,7 +20,7 @@ public class Company {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "id_company", sequenceName = "company_id_seq", schema = "tartarus")
+    @SequenceGenerator(name = "company_id", sequenceName = "company_id_seq", schema = "tartarus")
     @Column(name = "id")
     private Long id;
 
@@ -38,13 +38,12 @@ public class Company {
     private String companyName;
 
 
-    @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "company_account",
-            joinColumns = @JoinColumn(name = "id_company"),
-            inverseJoinColumns = @JoinColumn(name = "id_account")
+            name = "company_blockchain",
+            joinColumns = @JoinColumn(name = "company_id"),
+            inverseJoinColumns = @JoinColumn(name = "blockchain_id")
     )
-    private Set<Account> accountsCompany;
+    private Set<Blockchain> accountBlockchains;
 
 }

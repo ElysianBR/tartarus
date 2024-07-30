@@ -19,6 +19,10 @@ public class JwtBuilder {
     @Setter
     private Long companyId;
 
+    @Getter
+    @Setter
+    private String blochchainTag;
+
     public JwtBuilder(JWTCreator.Builder builder) {
         this.builder = builder;
     }
@@ -26,6 +30,10 @@ public class JwtBuilder {
     public JWTCreator.Builder getBuilder() {
         if (this.companyId != null){
             this.builder.withClaim("companyId", companyId);
+        }
+
+        if (this.blochchainTag != null){
+            this.builder.withClaim("blochchainTag", blochchainTag);
         }
 
         return this.builder;

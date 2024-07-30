@@ -1,0 +1,3 @@
+SET JAVA_HOME=C:\Users\Administrador\.jdks\graalvm-jdk-21.0.3
+
+web3j generate solidity -pt -b "C:\Users\Administrador\Documents\github\William Civa\tartarus\src\main\java\br\com\elysian\tartarus\service\blockchain\ethereum\model\contract\stock\stock.bin" -a "C:\Users\Administrador\Documents\github\William Civa\tartarus\src\main\java\br\com\elysian\tartarus\service\blockchain\ethereum\model\contract\stock\stock.abi" -o "C:\Users\Administrador\Documents\github\William Civa\tartarus\src\main\java" -p br.com.elysian.tartarus.service.blockchain.ethereum.model.contract.stock

@@ -11,7 +11,7 @@ import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.repository.ConfirmationDAO;
 import br.com.elysian.tartarus.repository.ConfirmationTypeDAO;
 import br.com.elysian.tartarus.repository.RoleDAO;
-import br.com.elysian.tartarus.repository.UserDAO;
+import br.com.elysian.tartarus.repository.AccountDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,29 +24,29 @@ public class AccountService {
 
     private final MessageService messageService;
     private final AuthService authService;
-    private final UserDAO userDAO;
+    private final AccountDAO accountDAO;
     private final RoleDAO roleDAO;
     private final ConfirmationDAO confirmationDAO;
     private final ConfirmationTypeDAO confirmationTypeDAO;
 
 
     @Autowired
-    public AccountService(MessageService messageService, AuthService authService, UserDAO userDAO, RoleDAO roleDAO, ConfirmationDAO confirmationMailRep, ConfirmationTypeDAO confirmationTypeDAO) {
+    public AccountService(MessageService messageService, AuthService authService, AccountDAO accountDAO, RoleDAO roleDAO, ConfirmationDAO confirmationMailRep, ConfirmationTypeDAO confirmationTypeDAO) {
         this.messageService = messageService;
         this.authService = authService;
-        this.userDAO = userDAO;
+        this.accountDAO = accountDAO;
         this.roleDAO = roleDAO;
         this.confirmationDAO = confirmationMailRep;
         this.confirmationTypeDAO = confirmationTypeDAO;
     }
 
     public Account saveUser(RegistrationDTO registrationDTO) throws EmailAlreadyRegisteredException {
-        if (userDAO.existsByEmail(registrationDTO.getEmail())) {
+        if (accountDAO.existsByEmail(registrationDTO.getEmail())) {
             throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email.already-registered"), registrationDTO.getEmail()));
         }
 
 
-        Account account = userDAO.save(new Account(registrationDTO));
+        Account account = accountDAO.save(new Account(registrationDTO));
         ConfirmationType confirmationType = confirmationTypeDAO.findById(1).get();
         Confirmation confirmationMail = new Confirmation(account, confirmationType);
         confirmationDAO.save(confirmationMail);
@@ -85,7 +85,7 @@ public class AccountService {
 
                     account.setAccountRoles(roles);
                     account.setActive(true);
-                    this.userDAO.save(account);
+                    this.accountDAO.save(account);
 
                     return new SuccessDTO(true, messageService.getMessage("tartarus.confirmation.accepted-token"));
 
@@ -106,8 +106,8 @@ public class AccountService {
         AuthenticationAccount authentication = authService.getCurrentAuthentication();
         Long idUser = (Long) authentication.getPrincipal();
 
-        if (userDAO.existsById(idUser)) {
-            return userDAO.findById(idUser).get();
+        if (accountDAO.existsById(idUser)) {
+            return accountDAO.findById(idUser).get();
         }
         
         return null;

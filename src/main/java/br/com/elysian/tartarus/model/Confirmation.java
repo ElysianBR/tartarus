@@ -23,12 +23,12 @@ public class Confirmation {
     //@JsonBackReference
     @Id
     @ManyToOne
-    @JoinColumn(name = "id_account", nullable = false)
+    @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
     @Id
     @OneToOne
-    @JoinColumn(name = "id_type", nullable = false)
+    @JoinColumn(name = "type_id", nullable = false)
     private ConfirmationType type;
 
     @Column(name = "sequence", nullable = false, length = 6)

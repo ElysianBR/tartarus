@@ -23,6 +23,9 @@ public class CredentialAccount {
     @Setter
     protected Long companyId;
 
+    @Setter
+    protected String blockchainTag;
+
 
     public CredentialAccount(Account account) {
         this.accountId = account.getId();
