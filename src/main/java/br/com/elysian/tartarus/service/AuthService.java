@@ -6,7 +6,7 @@ import br.com.elysian.tartarus.dto.v1.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Role;
-import br.com.elysian.tartarus.repository.UserDAO;
+import br.com.elysian.tartarus.repository.AccountDAO;
 import br.com.elysian.tartarus.service.jwt.JwtBuilder;
 import br.com.elysian.tartarus.service.jwt.JwtService;
 import br.com.elysian.tartarus.utils.PasswordUtils;
@@ -36,7 +36,7 @@ public class AuthService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
     private final MessageService messageService;
-    private final UserDAO userDAO;
+    private final AccountDAO accountDAO;
     private final JwtService jwtService;
     @Getter
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -49,9 +49,9 @@ public class AuthService {
 
 
     @Autowired
-    private AuthService(MessageService messageService, UserDAO userDAO, JwtService jwtUtil) {
+    private AuthService(MessageService messageService, AccountDAO accountDAO, JwtService jwtUtil) {
         this.messageService = messageService;
-        this.userDAO = userDAO;
+        this.accountDAO = accountDAO;
         this.jwtService = jwtUtil;
     }
 
@@ -71,11 +71,11 @@ public class AuthService {
             String password = decodedJWT.getClaim("password").asString();
 
             if (email != null && password != null) {
-                boolean existsAccount = userDAO.existsByEmail(email);
+                boolean existsAccount = accountDAO.existsByEmail(email);
 
                 if (existsAccount) {
 
-                    Account account = userDAO.findByEmail(email);
+                    Account account = accountDAO.findByEmail(email);
 
                     String passwordAccount = account.getPassword();
 
@@ -136,9 +136,9 @@ public class AuthService {
 
 
     public TokenDTO getAuthorization(LoginDTO auth) throws UsernameNotFoundException {
-        if (userDAO.existsByEmail(auth.getEmail())) {
+        if (accountDAO.existsByEmail(auth.getEmail())) {
 
-            Account account = userDAO.findByEmail(auth.getEmail());
+            Account account = accountDAO.findByEmail(auth.getEmail());
 
             if (PasswordUtils.verifyPassword(auth.getPassword(), account.getPassword())) {
                 return this.getAuthorization(account);
@@ -163,12 +163,15 @@ public class AuthService {
 
         Long idUser = (Long) auth.getPrincipal();
 
-        if (userDAO.existsById(idUser)) {
-            Account account = userDAO.findById(idUser).get();
+        if (accountDAO.existsById(idUser)) {
+            Account account = accountDAO.findById(idUser).get();
 
             JwtBuilder builder = jwtService.getBuilder(account);
             CredentialAccount credential = (CredentialAccount) auth.getCredentials();
+
+            // TODO: Melhoria na contrução a classe builder de JWT, para que a mesma pegue os "clains" da autentificação e set automaticamente nos claims do JWT...
             builder.setCompanyId(credential.getCompanyId());
+            builder.setBlochchainTag(credential.getBlockchainTag());
 
             this.jwtToken = jwtService.sign(builder);
 

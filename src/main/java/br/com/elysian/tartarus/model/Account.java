@@ -27,7 +27,7 @@ public class Account {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "id_account", sequenceName = "account_id_seq", schema = "tartarus")
+    @SequenceGenerator(name = "account_id", sequenceName = "account_id_seq", schema = "tartarus")
     @Column(name = "id")
     private Long id;
 
@@ -64,8 +64,8 @@ public class Account {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "account_role",
-            joinColumns = @JoinColumn(name = "id_account"),
-            inverseJoinColumns = @JoinColumn(name = "id_role")
+            joinColumns = @JoinColumn(name = "account_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> accountRoles;
 
@@ -73,8 +73,8 @@ public class Account {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "company_account",
-            joinColumns = @JoinColumn(name = "id_account"),
-            inverseJoinColumns = @JoinColumn(name = "id_company")
+            joinColumns = @JoinColumn(name = "account_id"),
+            inverseJoinColumns = @JoinColumn(name = "company_id")
     )
     private Set<Company> companies;
 
