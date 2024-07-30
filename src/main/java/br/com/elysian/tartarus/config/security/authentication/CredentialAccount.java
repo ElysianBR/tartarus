@@ -1,6 +1,8 @@
 package br.com.elysian.tartarus.config.security.authentication;
 
 import br.com.elysian.tartarus.model.Account;
+import com.auth0.jwt.JWTCreator;
+import com.auth0.jwt.impl.ClaimsSerializer;
 import com.auth0.jwt.interfaces.Claim;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,12 +10,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Getter
 public class CredentialAccount {
 
-    Logger logger = LoggerFactory.getLogger(CredentialAccount.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CredentialAccount.class);
 
     // Account.class
     private final Long accountId;
@@ -54,9 +60,9 @@ public class CredentialAccount {
 
                     field.set(this, claimValue.as(field.getType()));
                 } catch (NoSuchFieldException e) {
-                    logger.warn(String.format("Claim '%s' No Such Filed in this class.", claimName));
+                    LOGGER.warn(String.format("Claim '%s' No Such Filed in this class.", claimName));
                 } catch (IllegalAccessException e) {
-                    logger.warn(String.format("Claim '%s', field Illegal Access Exception in this class.", claimName));
+                    LOGGER.warn(String.format("Claim '%s', field Illegal Access Exception in this class.", claimName));
                 }
             }
 

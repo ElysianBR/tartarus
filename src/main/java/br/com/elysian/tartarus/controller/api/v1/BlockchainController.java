@@ -82,6 +82,7 @@ public class BlockchainController {
             return ResponseEntity.ok(new StockIndexDTO(stockIndex));
         }
 
+        // TODO: Implementar exception personalizada
         throw new Exception("Blockchain not logged.");
     }
 
