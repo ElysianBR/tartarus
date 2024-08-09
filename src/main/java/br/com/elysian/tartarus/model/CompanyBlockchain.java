@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigInteger;
 import java.util.Set;
 
 @Getter
@@ -30,5 +31,9 @@ public class CompanyBlockchain {
 
     @Column(name = "adress")
     private String adress;
+
+
+    @Column(name = "max_gas_wei", nullable = false)
+    private BigInteger maxGasWei = BigInteger.ONE;
 
 }

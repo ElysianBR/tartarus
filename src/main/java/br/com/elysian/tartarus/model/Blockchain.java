@@ -22,8 +22,11 @@ public class Blockchain {
     @Column(name = "id", length = 10)
     private Long id;
 
+    @Column(name = "network_url", nullable = false)
+    private String networkUrl;
+
     @Column(name = "active")
-    @ColumnDefault( "true" )
+    @ColumnDefault("true")
     private boolean active = true;
 
     @Column(name = "tag", length = 5, nullable = false, unique = true)

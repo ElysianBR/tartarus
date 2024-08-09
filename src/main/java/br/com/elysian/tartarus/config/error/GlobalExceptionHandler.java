@@ -1,11 +1,9 @@
 package br.com.elysian.tartarus.config.error;
 
-import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
-import br.com.elysian.tartarus.exception.ReCaptchaException;
+import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,7 +26,7 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler({UsernameNotFoundException.class, NoResourceFoundException.class})
+    @ExceptionHandler({UsernameNotFoundException.class, NoResourceFoundException.class, BlockchainNotFoundException.class, CompanyNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND, ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
@@ -58,7 +56,7 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler(BadCredentialsException.class)
+    @ExceptionHandler({BadCredentialsException.class, BlockchainNotLoggedInException.class, CompanyNotLoggedInException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED, ex);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);

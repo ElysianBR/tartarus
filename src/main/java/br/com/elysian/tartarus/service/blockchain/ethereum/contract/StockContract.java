@@ -25,7 +25,7 @@ public class StockContract extends ContractImp<Stock> {
     private final Stock stock;
 
     public StockContract(EtherClient client) throws ContractInstantiationFailed {
-        super(Stock.class, CONTRACT_ADRESS, client.getWeb3j(), client.getClientAdress(), GAS_PRICE, BigInteger.valueOf(Long.MAX_VALUE));
+        super(Stock.class, CONTRACT_ADRESS, client.getWeb3j(), client.getClientAdress(), GAS_PRICE, client.getMaxGasWei());
 
         this.stock = super.load();
     }

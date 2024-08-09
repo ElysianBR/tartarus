@@ -4,6 +4,8 @@ import br.com.elysian.tartarus.config.security.authentication.AuthenticationAcco
 import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
 import br.com.elysian.tartarus.dto.v1.CompanyDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
+import br.com.elysian.tartarus.exception.CompanyNotFoundException;
+import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
 import br.com.elysian.tartarus.model.Company;
 import br.com.elysian.tartarus.model.util.EntityInfo;
 import br.com.elysian.tartarus.service.AuthService;
@@ -37,12 +39,10 @@ public class CompanyController {
     }
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @PostMapping("/swith")
-    public ResponseEntity<TokenDTO> swith(@RequestParam("companyId") Long companyId, HttpServletResponse response) {
-        // TODO: Implementar camada de seguranaça para fazer o set da credencial DENTREO do AuthService ou CompanyService, fazendo a validação se de fato o usuário possui acesso a emrpesa.
-        AuthenticationAccount authenticationAccount = authService.getCurrentAuthentication();
-        ((CredentialAccount) authenticationAccount.getCredentials()).setCompanyId(companyId);
+    public ResponseEntity<TokenDTO> swith(@RequestParam("companyId") Long companyId, HttpServletResponse response) throws CompanyNotFoundException {
+        companyService.swith(companyId);
 
         TokenDTO token = authService.getAuthorizationByCurrentAuthentication();
         authService.setHeaders(token, response);
@@ -51,7 +51,7 @@ public class CompanyController {
     }
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping("/getCompanies")
     public ResponseEntity<ArrayList<CompanyDTO>> getCompanies() {
         Set<Company> companySet = companyService.getBusinessFromAccount();
@@ -67,18 +67,14 @@ public class CompanyController {
     }
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping("/getCompany")
-    public ResponseEntity<CompanyDTO> getCompany() throws CredentialException {
+    public ResponseEntity<CompanyDTO> getCompany() throws CompanyNotLoggedInException {
         Company company = companyService.getCompanyLoggedIn();
 
-        if (company != null) {
-            return ResponseEntity.ok(
-                    new CompanyDTO(company)
-            );
-        }
-
-        throw new CredentialException(messageService.getMessage("tartarus.authorization.company.no-logged-in"));
+        return ResponseEntity.ok(
+                new CompanyDTO(company)
+        );
     }
 
 

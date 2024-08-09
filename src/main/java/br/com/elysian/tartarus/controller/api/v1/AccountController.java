@@ -67,7 +67,7 @@ public class AccountController {
 
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping("/getAccount")
     public ResponseEntity<AccountLoggedInDTO> getAccount() {
         return ResponseEntity.ok(
