@@ -37,13 +37,4 @@ public class Company {
     @Column(name = "company_name", nullable = false)
     private String companyName;
 
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "company_blockchain",
-            joinColumns = @JoinColumn(name = "company_id"),
-            inverseJoinColumns = @JoinColumn(name = "blockchain_id")
-    )
-    private Set<Blockchain> accountBlockchains;
-
 }

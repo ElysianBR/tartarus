@@ -20,7 +20,6 @@ public class Confirmation {
 
     private static final int MINUTES_EXPIRATION = 10;
 
-    //@JsonBackReference
     @Id
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
