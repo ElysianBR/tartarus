@@ -4,12 +4,11 @@ import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.GetStockIndexDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.StockIndexDTO;
 import br.com.elysian.tartarus.exception.BlockchainNotFoundException;
+import br.com.elysian.tartarus.model.blockchain.contracts.ethereum.SupplyChainBase;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.blockchain.BlockchainService;
 import br.com.elysian.tartarus.service.blockchain.ethereum.EtherClient;
-import br.com.elysian.tartarus.service.blockchain.ethereum.contract.StockContract;
 
-import br.com.elysian.tartarus.service.blockchain.ethereum.contract.model.Stock;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,11 +26,13 @@ public class BlockchainController {
 
     private final AuthService authService;
     private final BlockchainService blockchainService;
+    private final EtherClient etherClient;
 
     @Autowired
-    public BlockchainController(AuthService authService, BlockchainService blockchainService) {
+    public BlockchainController(AuthService authService, BlockchainService blockchainService, EtherClient etherClient) {
         this.authService = authService;
         this.blockchainService = blockchainService;
+        this.etherClient = etherClient;
     }
 
 
@@ -50,12 +51,11 @@ public class BlockchainController {
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    @PostMapping("/getStockIndex")
-    public ResponseEntity<StockIndexDTO> getStockIndex(@Valid @RequestBody GetStockIndexDTO getStockIndexdto) throws Exception {
-        EtherClient client = blockchainService.getEtherClientLoggedIn();
+    @PostMapping("/registerConsumersAccess")
+    public ResponseEntity<StockIndexDTO> registerConsumersAccess(@Valid @RequestBody GetStockIndexDTO getStockIndexdto) throws Exception {
+        SupplyChainBase supplyChainBase = etherClient.getContract(SupplyChainBase.class);
 
-        StockContract stockContract = new StockContract(client);
-        Stock stock = stockContract.getStock();
+        Stock stock = supplyChainBase.registerConsumersAccess();
 
         BigInteger stockIndex = stock.findStockIndex(new Stock.StockPksDef(getStockIndexdto.getProductId(), getStockIndexdto.getControl())).send();
 

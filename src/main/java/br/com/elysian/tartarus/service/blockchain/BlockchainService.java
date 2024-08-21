@@ -73,15 +73,4 @@ public class BlockchainService {
         throw new BlockchainNotLoggedInException(messageService.getMessage("tartarus.blockchain.not.logged.in"));
     }
 
-
-    public EtherClient getEtherClientLoggedIn() throws BlockchainNotLoggedInException, BlockchainNotFoundException, CompanyNotLoggedInException {
-        CompanyBlockchain companyBlockchain = this.getBlockchainLoggedIn();
-        return new EtherClient(companyBlockchain.getBlockchain().getNetworkUrl(), companyBlockchain.getAdress(), companyBlockchain.getMaxGasWei());
-    }
-
-
-    public EtherClient getEtherClient(CompanyBlockchain companyBlockchain) {
-        return new EtherClient(companyBlockchain.getBlockchain().getNetworkUrl(), companyBlockchain.getAdress(), companyBlockchain.getMaxGasWei());
-    }
-
 }

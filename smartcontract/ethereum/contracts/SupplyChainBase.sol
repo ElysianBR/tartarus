@@ -6,7 +6,7 @@ contract SupplyChainBase {
     address private feeRecipient = 0x612f733F3809D2868EAbC02F675AA173c23dB548;
     mapping(address => bool) private admins;
     mapping(address => mapping(string => bool)) private consumersAccess;
-    mapping(string => bool)  availableAccess;
+    mapping(string => bool) public availableAccess;
     mapping(bytes4 => string) public sigAccess;
 
 
