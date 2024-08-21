@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.service.blockchain.ethereum.client;
+package br.com.elysian.tartarus.service.blockchain.ethereum;
 
 import lombok.Getter;
 import org.web3j.protocol.Web3j;

@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler({UsernameNotFoundException.class, NoResourceFoundException.class, BlockchainNotFoundException.class, CompanyNotFoundException.class})
+    @ExceptionHandler({NoResourceFoundException.class, BlockchainNotFoundException.class, CompanyNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND, ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler({BadCredentialsException.class, BlockchainNotLoggedInException.class, CompanyNotLoggedInException.class})
+    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class, BlockchainNotLoggedInException.class, CompanyNotLoggedInException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED, ex);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);

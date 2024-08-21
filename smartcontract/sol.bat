@@ -13,7 +13,7 @@ if "%CONTRACT_NAME%"=="" goto contractnamenotdefined
 if not "%3"=="" set JAVA_HOME=%3
 
 
-web3j generate solidity -pt -a "%SCRIPT_DIR%%BLOCKCHAIN_NAME%\build\contracts\%CONTRACT_NAME%.abi" -b "%SCRIPT_DIR%%BLOCKCHAIN_NAME%\build\contracts\%CONTRACT_NAME%.bin" -o "%SCRIPT_DIR%..\src\main\java" -p br.com.elysian.tartarus.service.blockchain.%BLOCKCHAIN_NAME%.contract.model
+web3j generate solidity -pt -a "%SCRIPT_DIR%%BLOCKCHAIN_NAME%\build\contracts\%CONTRACT_NAME%.abi" -b "%SCRIPT_DIR%%BLOCKCHAIN_NAME%\build\contracts\%CONTRACT_NAME%.bin" -o "%SCRIPT_DIR%..\src\main\java" -p br.com.elysian.tartarus.model.blockchain.contracts.%BLOCKCHAIN_NAME%
 echo *----------------------------------------*
 echo ^| Starting class generation, please wait ^|
 echo *----------------------------------------*

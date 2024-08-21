@@ -6,10 +6,10 @@ import br.com.elysian.tartarus.dto.v1.blockchain.StockIndexDTO;
 import br.com.elysian.tartarus.exception.BlockchainNotFoundException;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.blockchain.BlockchainService;
-import br.com.elysian.tartarus.service.blockchain.ethereum.client.EtherClient;
+import br.com.elysian.tartarus.service.blockchain.ethereum.EtherClient;
 import br.com.elysian.tartarus.service.blockchain.ethereum.contract.StockContract;
 
-import br.com.elysian.tartarus.service.blockchain.ethereum.model.contract.stock.Stock;
+import br.com.elysian.tartarus.service.blockchain.ethereum.contract.model.Stock;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletResponse;

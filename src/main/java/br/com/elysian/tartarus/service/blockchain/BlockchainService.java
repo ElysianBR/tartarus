@@ -13,7 +13,7 @@ import br.com.elysian.tartarus.repository.CompanyBlockchainDAO;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.CompanyService;
 import br.com.elysian.tartarus.service.MessageService;
-import br.com.elysian.tartarus.service.blockchain.ethereum.client.EtherClient;
+import br.com.elysian.tartarus.service.blockchain.ethereum.EtherClient;
 import br.com.elysian.tartarus.exception.BlockchainNotLoggedInException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
