@@ -29,11 +29,7 @@ public class CompanyBlockchain {
     private Blockchain blockchain;
 
 
-    @Column(name = "adress")
-    private String adress;
-
-
     @Column(name = "max_gas_wei", nullable = false)
-    private BigInteger maxGasWei = BigInteger.ONE;
+    private BigInteger maxGasWei = BigInteger.ZERO;
 
 }
