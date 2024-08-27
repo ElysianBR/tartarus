@@ -2,7 +2,6 @@ package br.com.elysian.tartarus.service;
 
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
 import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
-import br.com.elysian.tartarus.exception.BlockchainNotFoundException;
 import br.com.elysian.tartarus.exception.CompanyNotFoundException;
 import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
 import br.com.elysian.tartarus.model.Account;
@@ -30,19 +29,19 @@ public class CompanyService {
     }
 
 
-    public void swith(Long companyId) throws CompanyNotFoundException {
+    public void with(Long companyId) throws CompanyNotFoundException {
         AuthenticationAccount authenticationAccount = authService.getCurrentAuthentication();
 
         if (companyDAO.existsById(companyId)) {
             ((CredentialAccount) authenticationAccount.getCredentials()).setCompanyId(companyId);
         } else {
-            throw new CompanyNotFoundException(String.format(messageService.getMessage("tartarus.company.not.found"), companyId));
+            throw new CompanyNotFoundException(String.format(messageService.getMessage("tartarus.company.not-found"), companyId));
         }
     }
 
 
     public Set<Company> getBusinessFromAccount() {
-        Account account = accountService.getAccountLogged();
+        Account account = accountService.getAccountLoggedIn();
         return account.getCompanies();
     }
 
@@ -51,12 +50,10 @@ public class CompanyService {
         Long companyId = ((CredentialAccount) authentication.getCredentials()).getCompanyId();
 
         if (companyId != null) {
-            if (companyDAO.existsById(companyId)) {
-                return companyDAO.findById(companyId).get();
-            }
+                return companyDAO.findById(companyId).orElse(null);
         }
 
-        throw new CompanyNotLoggedInException(messageService.getMessage("tartarus.company.not.logged.in"));
+        throw new CompanyNotLoggedInException(messageService.getMessage("tartarus.company.not-logged-in"));
     }
 
 }

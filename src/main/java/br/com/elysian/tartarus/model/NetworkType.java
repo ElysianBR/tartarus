@@ -7,8 +7,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(schema = "tartarus", name = "blockchain_type")
-public class BlockchainType {
+@Table(schema = "tartarus", name = "network_type")
+public class NetworkType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

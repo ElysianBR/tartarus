@@ -42,7 +42,7 @@ public class AccountService {
 
     public Account saveUser(RegistrationDTO registrationDTO) throws EmailAlreadyRegisteredException {
         if (accountDAO.existsByEmail(registrationDTO.getEmail())) {
-            throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email.already-registered"), registrationDTO.getEmail()));
+            throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email-already-registered"), registrationDTO.getEmail()));
         }
 
 
@@ -63,7 +63,7 @@ public class AccountService {
 
 
     public SuccessDTO confirmAccount(String sequenceToken) {
-        Account account = this.getAccountLogged();
+        Account account = this.getAccountLoggedIn();
         Optional<Confirmation> optionalConfirmation = account.getEnableConfirmation();
         if (optionalConfirmation.isPresent()) {
 
@@ -102,14 +102,10 @@ public class AccountService {
     }
 
 
-    public Account getAccountLogged() {
+    public Account getAccountLoggedIn() {
         AuthenticationAccount authentication = authService.getCurrentAuthentication();
         Long idUser = (Long) authentication.getPrincipal();
 
-        if (accountDAO.existsById(idUser)) {
-            return accountDAO.findById(idUser).get();
-        }
-        
-        return null;
+        return accountDAO.findById(idUser).orElse(null);
     }
 }

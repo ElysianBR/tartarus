@@ -24,15 +24,12 @@ public class Company {
     @Column(name = "id")
     private Long id;
 
-
     @Column(name = "active")
     @ColumnDefault("false")
     private boolean active = false;
 
-
     @Column(name = "cnpj", nullable = false, unique = true)
     private String cnpj;
-
 
     @Column(name = "company_name", nullable = false)
     private String companyName;

@@ -6,19 +6,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.validator.constraints.Length;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(schema = "tartarus", name = "blockchain")
-public class Blockchain {
+@Table(schema = "tartarus", name = "network")
+public class Network {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "blockchain_id", sequenceName = "blockchain_id_seq", schema = "tartarus")
+    @SequenceGenerator(name = "network_id", sequenceName = "network_id_seq", schema = "tartarus")
     @Column(name = "id", length = 10)
     private Long id;
 
@@ -40,6 +39,15 @@ public class Blockchain {
 
     @OneToOne
     @JoinColumn(name = "type_id", nullable = false)
-    private BlockchainType type;
+    private NetworkType type;
+
+    @OneToOne
+    @JoinColumn(name = "blockchain_id")
+    private Blockchain blockchain;
+
+
+    public String getNetworkNameFormated() {
+        return tag + " - " + name;
+    }
 
 }

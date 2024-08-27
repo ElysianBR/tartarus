@@ -1,24 +1,24 @@
 package br.com.elysian.tartarus.exception;
 
 
-public class BlockchainNotLoggedInException extends Exception {
+public class NetworkNotLoggedInException extends Exception {
 
-    public BlockchainNotLoggedInException() {
+    public NetworkNotLoggedInException() {
     }
 
-    public BlockchainNotLoggedInException(String message) {
+    public NetworkNotLoggedInException(String message) {
         super(message);
     }
 
-    public BlockchainNotLoggedInException(String message, Throwable cause) {
+    public NetworkNotLoggedInException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public BlockchainNotLoggedInException(Throwable cause) {
+    public NetworkNotLoggedInException(Throwable cause) {
         super(cause);
     }
 
-    public BlockchainNotLoggedInException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public NetworkNotLoggedInException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

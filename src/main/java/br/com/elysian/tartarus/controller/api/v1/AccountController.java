@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +41,19 @@ public class AccountController {
     }
 
 
-    @PostMapping("/createAccount")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    @GetMapping()
+    public ResponseEntity<AccountLoggedInDTO> getAccount() {
+        return ResponseEntity.ok(
+                new AccountLoggedInDTO(
+                        accountService.getAccountLoggedIn()
+                )
+        );
+    }
+
+
+    @PostMapping("/create-account")
     public ResponseEntity<TokenDTO> createAccount(@Valid @RequestBody RegistrationDTO registrationDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
@@ -58,22 +69,10 @@ public class AccountController {
 
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping("/confirmAccount")
+    @PostMapping("/confirm-account")
     public ResponseEntity<SuccessDTO> confirmAccount(@RequestParam("sequenceToken") String sequenceToken) {
         return ResponseEntity.ok(
                 accountService.confirmAccount(sequenceToken)
-        );
-    }
-
-
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    @GetMapping("/getAccount")
-    public ResponseEntity<AccountLoggedInDTO> getAccount() {
-        return ResponseEntity.ok(
-                new AccountLoggedInDTO(
-                        accountService.getAccountLogged()
-                )
         );
     }
 

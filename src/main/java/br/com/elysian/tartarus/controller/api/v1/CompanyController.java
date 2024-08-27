@@ -1,7 +1,5 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
-import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
 import br.com.elysian.tartarus.dto.v1.CompanyDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.exception.CompanyNotFoundException;
@@ -19,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.security.auth.login.CredentialException;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -38,11 +35,24 @@ public class CompanyController {
         this.authService = authService;
     }
 
+
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    @PostMapping("/swith")
-    public ResponseEntity<TokenDTO> swith(@RequestParam("companyId") Long companyId, HttpServletResponse response) throws CompanyNotFoundException {
-        companyService.swith(companyId);
+    @GetMapping()
+    public ResponseEntity<CompanyDTO> getCompany() throws CompanyNotLoggedInException {
+        Company company = companyService.getCompanyLoggedIn();
+
+        return ResponseEntity.ok(
+                new CompanyDTO(company)
+        );
+    }
+
+
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    @PostMapping("/with")
+    public ResponseEntity<TokenDTO> with(@RequestParam("companyId") Long companyId, HttpServletResponse response) throws CompanyNotFoundException {
+        companyService.with(companyId);
 
         TokenDTO token = authService.getAuthorizationByCurrentAuthentication();
         authService.setHeaders(token, response);
@@ -52,7 +62,7 @@ public class CompanyController {
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    @GetMapping("/getCompanies")
+    @GetMapping("/companies")
     public ResponseEntity<ArrayList<CompanyDTO>> getCompanies() {
         Set<Company> companySet = companyService.getBusinessFromAccount();
 
@@ -64,17 +74,6 @@ public class CompanyController {
         });
 
         return ResponseEntity.ok(companyDTOS);
-    }
-
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    @GetMapping("/getCompany")
-    public ResponseEntity<CompanyDTO> getCompany() throws CompanyNotLoggedInException {
-        Company company = companyService.getCompanyLoggedIn();
-
-        return ResponseEntity.ok(
-                new CompanyDTO(company)
-        );
     }
 
 

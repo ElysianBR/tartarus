@@ -22,9 +22,6 @@ public class Blockchain {
     @Column(name = "id", length = 10)
     private Long id;
 
-    @Column(name = "network_url", nullable = false)
-    private String networkUrl;
-
     @Column(name = "active")
     @ColumnDefault("true")
     private boolean active = true;
@@ -37,9 +34,5 @@ public class Blockchain {
 
     @Column(name = "description")
     private String description;
-
-    @OneToOne
-    @JoinColumn(name = "type_id", nullable = false)
-    private BlockchainType type;
 
 }

@@ -6,14 +6,18 @@ if not "%1"=="" set BLOCKCHAIN_NAME=%1
 if "%BLOCKCHAIN_NAME%"=="" goto blochainnotdefined
 
 
-if not "%2"=="" set CONTRACT_NAME=%2
+if not "%2"=="" set VERSION=%2
+if "%VERSION%"=="" goto versionnotdefined
+
+
+if not "%3"=="" set CONTRACT_NAME=%3
 if "%CONTRACT_NAME%"=="" goto contractnamenotdefined
 
 
-if not "%3"=="" set JAVA_HOME=%3
+if not "%4"=="" set JAVA_HOME=%4
 
 
-web3j generate solidity -pt -a "%SCRIPT_DIR%%BLOCKCHAIN_NAME%\build\contracts\%CONTRACT_NAME%.abi" -b "%SCRIPT_DIR%%BLOCKCHAIN_NAME%\build\contracts\%CONTRACT_NAME%.bin" -o "%SCRIPT_DIR%..\src\main\java" -p br.com.elysian.tartarus.model.blockchain.contracts.%BLOCKCHAIN_NAME%
+web3j generate solidity -pt -a "%SCRIPT_DIR%%BLOCKCHAIN_NAME%\version\%VERSION%\build\contracts\%CONTRACT_NAME%.abi" -b "%SCRIPT_DIR%%BLOCKCHAIN_NAME%\version\%VERSION%\build\contracts\%CONTRACT_NAME%.bin" -o "%SCRIPT_DIR%..\src\main\java" -p br.com.elysian.tartarus.blockchain.contracts.%BLOCKCHAIN_NAME%.%VERSION%
 echo *----------------------------------------*
 echo ^| Starting class generation, please wait ^|
 echo *----------------------------------------*
@@ -29,6 +33,12 @@ if %ERRORLEVEL% == 0 (
 
 
 :blochainnotdefined
+echo ERROR: BLOCKCHAIN_NAME not defined!
+echo Define the BLOCKCHAIN_NAME variable before executing or pass it as the first argument of the script.
+goto fail
+
+
+:versionnotdefined
 echo ERROR: BLOCKCHAIN_NAME not defined!
 echo Define the BLOCKCHAIN_NAME variable before executing or pass it as the first argument of the script.
 goto fail

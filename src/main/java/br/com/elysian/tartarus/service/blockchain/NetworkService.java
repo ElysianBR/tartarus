@@ -2,87 +2,135 @@ package br.com.elysian.tartarus.service.blockchain;
 
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
 import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
-import br.com.elysian.tartarus.exception.BlockchainNotFoundException;
-import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
-import br.com.elysian.tartarus.exception.ContractNotFoundException;
+import br.com.elysian.tartarus.dto.v1.blockchain.NetworkDTO;
+import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.*;
-import br.com.elysian.tartarus.repository.BlockchainDAO;
-import br.com.elysian.tartarus.repository.CompanyBlockchainDAO;
-import br.com.elysian.tartarus.repository.ContractDAO;
+import br.com.elysian.tartarus.model.pk.CompanyNetworkAccountPK;
+import br.com.elysian.tartarus.model.pk.CompanyNetworkPK;
+import br.com.elysian.tartarus.repository.*;
+import br.com.elysian.tartarus.service.AccountService;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.CompanyService;
 import br.com.elysian.tartarus.service.MessageService;
-import br.com.elysian.tartarus.service.blockchain.ethereum.EtherClient;
-import br.com.elysian.tartarus.exception.BlockchainNotLoggedInException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Set;
+
 @Service
-public class BlockchainService {
+public class NetworkService {
 
     private final AuthService authService;
+    private final AccountService accountService;
     private final CompanyService companyService;
-    private final BlockchainDAO blockchainDAO;
-    private final CompanyBlockchainDAO companyBlockchainDAO;
+    private final NetworkDAO networkDAO;
+    private final CompanyNetworkContractDAO companyNetworkContractDAO;
     private final MessageService messageService;
-    private final ContractDAO contractDAO;
+    final CompanyNetworkAccountDAO companyNetworkAccountDAO;
+
 
     @Autowired
-    public BlockchainService(AuthService authService, CompanyService companyService, BlockchainDAO blockchainDAO,
-                             CompanyBlockchainDAO companyBlockchainDAO, MessageService messageService,
-                             ContractDAO contractDAO) {
+    public NetworkService(AuthService authService, AccountService accountService, CompanyService companyService, NetworkDAO networkDAO,
+                          CompanyNetworkContractDAO companyNetworkContractDAO, MessageService messageService, CompanyNetworkAccountDAO companyNetworkAccountDAO) {
         this.authService = authService;
+        this.accountService = accountService;
         this.companyService = companyService;
-        this.blockchainDAO = blockchainDAO;
-        this.companyBlockchainDAO = companyBlockchainDAO;
+        this.networkDAO = networkDAO;
+        this.companyNetworkContractDAO = companyNetworkContractDAO;
         this.messageService = messageService;
-        this.contractDAO = contractDAO;
+        this.companyNetworkAccountDAO = companyNetworkAccountDAO;
     }
 
 
-    public void swith(String blockchainTag) throws BlockchainNotFoundException {
+    public void with(String networkTag) throws NetworkNotFoundException {
         AuthenticationAccount authenticationAccount = authService.getCurrentAuthentication();
 
-        if (blockchainDAO.existsByTag(blockchainTag)) {
-            ((CredentialAccount) authenticationAccount.getCredentials()).setBlockchainTag(blockchainTag);
+        if (networkDAO.existsByTag(networkTag)) {
+            ((CredentialAccount) authenticationAccount.getCredentials()).setNetworkTag(networkTag);
         } else {
-            throw new BlockchainNotFoundException(String.format(messageService.getMessage("tartarus.blochain.not.found"), blockchainTag));
+            throw new NetworkNotFoundException(String.format(messageService.getMessage("tartarus.blockchain.network.not-found"), networkTag));
         }
     }
 
 
-    public Blockchain getBlockchainByTag(String blockchainTag) throws BlockchainNotFoundException {
-        if (blockchainDAO.existsByTag(blockchainTag)) {
-            return blockchainDAO.findByTag(blockchainTag);
+    public Network getNetworkByTag(String networkTag) throws NetworkNotFoundException {
+        Optional<Network> network = networkDAO.findByTag(networkTag);
+
+        if (network.isPresent()) {
+            return network.get();
         }
 
-        throw new BlockchainNotFoundException(String.format(messageService.getMessage("tartarus.blochain.not.found"), blockchainTag));
+        System.out.println("Entrei aq");
+        throw new NetworkNotFoundException(String.format(messageService.getMessage("tartarus.blockchain.network.not-found"), networkTag));
     }
 
 
-    public CompanyBlockchain getBlockchainLoggedIn() throws BlockchainNotFoundException, CompanyNotLoggedInException, BlockchainNotLoggedInException {
+    public CompanyNetwork getCompanyNetworkLoggedIn() throws NetworkNotFoundException, CompanyNotLoggedInException, NetworkNotLoggedInException {
         AuthenticationAccount authentication = authService.getCurrentAuthentication();
         CredentialAccount credentialAccount = (CredentialAccount) authentication.getCredentials();
-        String blockchainTag = credentialAccount.getBlockchainTag();
+        String networkTag = credentialAccount.getNetworkTag();
 
-        Blockchain blockchain = this.getBlockchainByTag(blockchainTag);
-        Company company = companyService.getCompanyLoggedIn();
+        if (networkTag != null) {
+            Network network = this.getNetworkByTag(networkTag);
+            Company company = companyService.getCompanyLoggedIn();
 
-        CompanyBlockchainPK companyBlockchainPKpk = new CompanyBlockchainPK(company, blockchain);
-        if (companyBlockchainDAO.existsById(companyBlockchainPKpk)) {
-            return companyBlockchainDAO.findById(companyBlockchainPKpk).get();
+            CompanyNetworkPK companyNetworkPK = new CompanyNetworkPK(company, network);
+
+            Optional<CompanyNetwork> companyNetwork = companyNetworkContractDAO.findById(companyNetworkPK);
+
+            if (companyNetwork.isPresent()) {
+                return companyNetwork.get();
+            }
         }
 
-        throw new BlockchainNotLoggedInException(messageService.getMessage("tartarus.blockchain.not.logged.in"));
+        throw new NetworkNotLoggedInException(messageService.getMessage("tartarus.blockchain.network.not-logged-in"));
     }
 
 
-    public Contract getContract(String contractName, String version) throws ContractNotFoundException {
-        if (this.contractDAO.existsByNameAndVersion(contractName, version)) {
-            return this.contractDAO.findByNameAndVersion(contractName, version);
+    public CompanyNetworkAccount getCompanyNetworkAccountLoggedIn() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetwork {
+        CompanyNetwork companyNetwork = this.getCompanyNetworkLoggedIn();
+        Account account = accountService.getAccountLoggedIn();
+
+        CompanyNetworkAccountPK pk = new CompanyNetworkAccountPK(companyNetwork, account);
+
+        Optional<CompanyNetworkAccount> companyNetworkAccount = this.companyNetworkAccountDAO.findById(pk);
+
+        if (companyNetworkAccount.isPresent()) {
+            return companyNetworkAccount.get();
         }
 
-        throw new ContractNotFoundException(String.format(messageService.getMessage("tartarus.blockchain.contract.not-found"), contractName, version));
+        throw new AccountNotRegisteredInCompanyNetwork(String.format(messageService.getMessage("tartarus.blockchain.network.account-not-registered-in-company-network"), companyNetwork.getNetwork().getNetworkNameFormated()));
+    }
+
+
+    public ArrayList<NetworkDTO> getAvailableNetworks() {
+        Set<Network> availableNetworks = networkDAO.findByActive(true);
+
+
+        ArrayList<NetworkDTO> networks = new ArrayList<>();
+        for (Network network : availableNetworks) {
+            networks.add(new NetworkDTO(network));
+        }
+
+
+        return networks;
+    }
+
+
+    public ArrayList<NetworkDTO> getRegisteredNetworks() {
+        Account account = accountService.getAccountLoggedIn();
+        Set<CompanyNetworkAccount> companyNetworkAccounts = companyNetworkAccountDAO.findByAccount(account);
+
+
+        ArrayList<NetworkDTO> networks = new ArrayList<>();
+        for (CompanyNetworkAccount network : companyNetworkAccounts) {
+            networks.add(new NetworkDTO(network.getCompanyNetwork().getNetwork()));
+        }
+
+
+        return networks;
     }
 
 

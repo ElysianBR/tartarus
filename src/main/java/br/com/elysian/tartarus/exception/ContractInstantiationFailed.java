@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.service.blockchain.ethereum;
+package br.com.elysian.tartarus.exception;
 
 
 public class ContractInstantiationFailed extends Exception {

@@ -1,0 +1,62 @@
+package br.com.elysian.tartarus.controller.api.v1.blockchain;
+
+
+import br.com.elysian.tartarus.blockchain.contracts.ethereum.v1.SupplyChainBase;
+import br.com.elysian.tartarus.model.CompanyNetworkContract;
+import br.com.elysian.tartarus.repository.NetworkContractDAO;
+import br.com.elysian.tartarus.service.blockchain.ContractService;
+import br.com.elysian.tartarus.service.blockchain.ethereum.EtherService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+
+@RestController
+@RequestMapping("/api/v1/blockchain/supply-chain")
+public class SupplyChainController {
+
+
+    private final EtherService etherService;
+    private final ContractService contractService;
+
+
+    public SupplyChainController(EtherService etherService, ContractService contractService) {
+        this.etherService = etherService;
+        this.contractService = contractService;
+    }
+
+
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    @PostMapping("/instance")
+    public ResponseEntity<TransactionReceipt> instance(@RequestParam("consumerAddress") String consumerAddress, @RequestParam("access") String access) throws Exception {
+        CompanyNetworkContract companyNetworkContract =  contractService.getNetworkContract("SupplyChainBase", "v1");
+        SupplyChainBase supplyChainBase = etherService.getNetworkClient().getContract(companyNetworkContract);
+
+
+        TransactionReceipt response = supplyChainBase.registerConsumersAccess(consumerAddress, access).send();
+
+        // TODO: Not response complete response from blockchain, is necessary treatment
+        return ResponseEntity.ok(response);
+    }
+
+
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    @PostMapping("/register-consumers-access")
+    public ResponseEntity<TransactionReceipt> registerConsumersAccess(@RequestParam("consumerAddress") String consumerAddress, @RequestParam("access") String access) throws Exception {
+        CompanyNetworkContract companyNetworkContract =  contractService.getNetworkContract("SupplyChainBase", "v1");
+        SupplyChainBase supplyChainBase = etherService.getNetworkClient().getContract(companyNetworkContract);
+
+        TransactionReceipt response = supplyChainBase.registerConsumersAccess(consumerAddress, access).send();
+
+        // TODO: Not response complete response from blockchain, is necessary treatment
+        return ResponseEntity.ok(response);
+    }
+
+}

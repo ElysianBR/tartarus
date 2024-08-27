@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class, BlockchainNotLoggedInException.class, CompanyNotLoggedInException.class})
+    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class, NetworkNotLoggedInException.class, CompanyNotLoggedInException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED, ex);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);

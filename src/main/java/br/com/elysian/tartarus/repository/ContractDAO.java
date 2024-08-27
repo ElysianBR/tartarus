@@ -1,11 +1,7 @@
 package br.com.elysian.tartarus.repository;
 
-import br.com.elysian.tartarus.model.Account;
+import br.com.elysian.tartarus.model.Contract;
+import br.com.elysian.tartarus.model.pk.ContractPK;
 
-public interface AccountDAO extends CRUDRepository<Account, Long>{
-
-     boolean existsByEmail(String email);
-
-     Account findByEmail(String email);
-
+public interface ContractDAO extends CRUDRepository<Contract, ContractPK>{
 }

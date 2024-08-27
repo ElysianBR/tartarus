@@ -1,5 +1,6 @@
 package br.com.elysian.tartarus.model;
 
+import br.com.elysian.tartarus.model.pk.ConfirmationPK;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

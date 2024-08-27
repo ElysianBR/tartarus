@@ -1,24 +1,24 @@
 package br.com.elysian.tartarus.exception;
 
 
-public class BlockchainNotFoundException extends Exception {
+public class NetworkNotFoundException extends Exception {
 
-    public BlockchainNotFoundException() {
+    public NetworkNotFoundException() {
     }
 
-    public BlockchainNotFoundException(String message) {
+    public NetworkNotFoundException(String message) {
         super(message);
     }
 
-    public BlockchainNotFoundException(String message, Throwable cause) {
+    public NetworkNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public BlockchainNotFoundException(Throwable cause) {
+    public NetworkNotFoundException(Throwable cause) {
         super(cause);
     }
 
-    public BlockchainNotFoundException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public NetworkNotFoundException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

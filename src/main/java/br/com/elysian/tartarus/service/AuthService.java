@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -71,11 +72,11 @@ public class AuthService {
             String password = decodedJWT.getClaim("password").asString();
 
             if (email != null && password != null) {
-                boolean existsAccount = accountDAO.existsByEmail(email);
+                Optional<Account> accountOpt = accountDAO.findByEmail(email);
 
-                if (existsAccount) {
+                if (accountOpt.isPresent()) {
 
-                    Account account = accountDAO.findByEmail(email);
+                    Account account = accountOpt.get();
 
                     String passwordAccount = account.getPassword();
 
@@ -136,16 +137,18 @@ public class AuthService {
 
 
     public TokenDTO getAuthorization(LoginDTO auth) throws UsernameNotFoundException {
-        if (accountDAO.existsByEmail(auth.getEmail())) {
+        Optional<Account> accountOpt = accountDAO.findByEmail(auth.getEmail());
 
-            Account account = accountDAO.findByEmail(auth.getEmail());
+        if (accountOpt.isPresent()) {
+
+            Account account = accountOpt.get();
 
             if (PasswordUtils.verifyPassword(auth.getPassword(), account.getPassword())) {
                 return this.getAuthorization(account);
             }
         }
 
-        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.validations.email.password.not-valid"), auth.getEmail()));
+        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.validations.email-password-not-valid"), auth.getEmail()));
     }
 
 
@@ -163,8 +166,10 @@ public class AuthService {
 
         Long idUser = (Long) auth.getPrincipal();
 
-        if (accountDAO.existsById(idUser)) {
-            Account account = accountDAO.findById(idUser).get();
+        Optional<Account> accountOpt = accountDAO.findById(idUser);
+
+        if (accountOpt.isPresent()) {
+            Account account = accountOpt.get();
 
             JwtBuilder builder = jwtService.getBuilder(account);
             CredentialAccount credential = (CredentialAccount) auth.getCredentials();
