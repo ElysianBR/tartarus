@@ -26,19 +26,19 @@ public class NetworkService {
     private final AccountService accountService;
     private final CompanyService companyService;
     private final NetworkDAO networkDAO;
-    private final CompanyNetworkContractDAO companyNetworkContractDAO;
+    private final CompanyNetworkDAO companyNetworkDAO;
     private final MessageService messageService;
     final CompanyNetworkAccountDAO companyNetworkAccountDAO;
 
 
     @Autowired
     public NetworkService(AuthService authService, AccountService accountService, CompanyService companyService, NetworkDAO networkDAO,
-                          CompanyNetworkContractDAO companyNetworkContractDAO, MessageService messageService, CompanyNetworkAccountDAO companyNetworkAccountDAO) {
+                          CompanyNetworkDAO companyNetworkDAO, MessageService messageService, CompanyNetworkAccountDAO companyNetworkAccountDAO) {
         this.authService = authService;
         this.accountService = accountService;
         this.companyService = companyService;
         this.networkDAO = networkDAO;
-        this.companyNetworkContractDAO = companyNetworkContractDAO;
+        this.companyNetworkDAO = companyNetworkDAO;
         this.messageService = messageService;
         this.companyNetworkAccountDAO = companyNetworkAccountDAO;
     }
@@ -78,7 +78,7 @@ public class NetworkService {
 
             CompanyNetworkPK companyNetworkPK = new CompanyNetworkPK(company, network);
 
-            Optional<CompanyNetwork> companyNetwork = companyNetworkContractDAO.findById(companyNetworkPK);
+            Optional<CompanyNetwork> companyNetwork = companyNetworkDAO.findById(companyNetworkPK);
 
             if (companyNetwork.isPresent()) {
                 return companyNetwork.get();
@@ -89,7 +89,7 @@ public class NetworkService {
     }
 
 
-    public CompanyNetworkAccount getCompanyNetworkAccountLoggedIn() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetwork {
+    public CompanyNetworkAccount getCompanyNetworkAccountLoggedIn() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException {
         CompanyNetwork companyNetwork = this.getCompanyNetworkLoggedIn();
         Account account = accountService.getAccountLoggedIn();
 
@@ -101,7 +101,7 @@ public class NetworkService {
             return companyNetworkAccount.get();
         }
 
-        throw new AccountNotRegisteredInCompanyNetwork(String.format(messageService.getMessage("tartarus.blockchain.network.account-not-registered-in-company-network"), companyNetwork.getNetwork().getNetworkNameFormated()));
+        throw new AccountNotRegisteredInCompanyNetworkException(String.format(messageService.getMessage("tartarus.blockchain.network.account-not-registered-in-company-network"), companyNetwork.getNetwork().getNetworkNameFormated()));
     }
 
 

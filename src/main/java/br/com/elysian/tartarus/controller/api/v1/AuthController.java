@@ -2,6 +2,7 @@ package br.com.elysian.tartarus.controller.api.v1;
 
 import br.com.elysian.tartarus.dto.v1.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
+import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.exception.ReCaptchaInvalidException;
 import br.com.elysian.tartarus.exception.ReCaptchaUnavailableException;
 import br.com.elysian.tartarus.service.AuthService;
@@ -37,7 +38,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenDTO> login(@Valid @RequestBody LoginDTO auth, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaUnavailableException, ReCaptchaInvalidException {
+    public ResponseEntity<TokenDTO> login(@Valid @RequestBody LoginDTO auth, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaUnavailableException, ReCaptchaInvalidException, InvalidUsernameOrPasswordException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);

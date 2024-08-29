@@ -1,5 +1,6 @@
 package br.com.elysian.tartarus.model;
 
+import br.com.elysian.tartarus.dto.v1.SaveCompanyDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,5 +34,11 @@ public class Company {
 
     @Column(name = "company_name", nullable = false)
     private String companyName;
+
+
+    public void setCompanyFromdDTO(SaveCompanyDTO companyDTO) {
+        this.cnpj = companyDTO.getCnpj();
+        this.companyName = companyDTO.getCompanyName();
+    }
 
 }

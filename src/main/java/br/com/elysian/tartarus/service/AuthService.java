@@ -4,6 +4,7 @@ import br.com.elysian.tartarus.config.security.authentication.AuthenticationAcco
 import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
 import br.com.elysian.tartarus.dto.v1.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
+import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.repository.AccountDAO;
@@ -24,7 +25,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -136,7 +136,7 @@ public class AuthService {
     }
 
 
-    public TokenDTO getAuthorization(LoginDTO auth) throws UsernameNotFoundException {
+    public TokenDTO getAuthorization(LoginDTO auth) throws InvalidUsernameOrPasswordException {
         Optional<Account> accountOpt = accountDAO.findByEmail(auth.getEmail());
 
         if (accountOpt.isPresent()) {
@@ -148,11 +148,11 @@ public class AuthService {
             }
         }
 
-        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.validations.email-password-not-valid"), auth.getEmail()));
+        throw new InvalidUsernameOrPasswordException(String.format(messageService.getMessage("tartarus.validations.email-password-not-valid"), auth.getEmail()));
     }
 
 
-    public TokenDTO getAuthorization(Account account) throws UsernameNotFoundException {
+    public TokenDTO getAuthorization(Account account) throws InvalidUsernameOrPasswordException {
         JwtBuilder builder = jwtService.getBuilder(account);
         this.jwtToken = jwtService.sign(builder);
 
@@ -161,7 +161,7 @@ public class AuthService {
     }
 
 
-    public TokenDTO getAuthorizationByCurrentAuthentication() throws UsernameNotFoundException {
+    public TokenDTO getAuthorizationByCurrentAuthentication() throws InvalidUsernameOrPasswordException {
         AuthenticationAccount auth = this.getCurrentAuthentication();
 
         Long idUser = (Long) auth.getPrincipal();

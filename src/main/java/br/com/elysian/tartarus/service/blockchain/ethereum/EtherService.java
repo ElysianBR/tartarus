@@ -2,11 +2,8 @@ package br.com.elysian.tartarus.service.blockchain.ethereum;
 
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.*;
-import br.com.elysian.tartarus.service.MessageService;
-import br.com.elysian.tartarus.service.blockchain.ContractService;
 import br.com.elysian.tartarus.service.blockchain.NetworkClient;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
@@ -43,7 +40,7 @@ public class EtherService {
     }
 
 
-    public NetworkClient getNetworkClient() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetwork {
+    public NetworkClient getNetworkClient() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException {
         return this.getNetworkClient(networkService.getCompanyNetworkAccountLoggedIn());
     }
 

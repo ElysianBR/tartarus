@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -56,7 +55,7 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class, NetworkNotLoggedInException.class, CompanyNotLoggedInException.class})
+    @ExceptionHandler({InvalidUsernameOrPasswordException.class, MismatchedPasswordsException.class, BadCredentialsException.class, NetworkNotLoggedInException.class, CompanyNotLoggedInException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED, ex);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);

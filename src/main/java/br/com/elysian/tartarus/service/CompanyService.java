@@ -2,6 +2,8 @@ package br.com.elysian.tartarus.service;
 
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
 import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
+import br.com.elysian.tartarus.dto.v1.CompanyDTO;
+import br.com.elysian.tartarus.dto.v1.SaveCompanyDTO;
 import br.com.elysian.tartarus.exception.CompanyNotFoundException;
 import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
 import br.com.elysian.tartarus.model.Account;
@@ -40,7 +42,7 @@ public class CompanyService {
     }
 
 
-    public Set<Company> getBusinessFromAccount() {
+    public Set<Company> getCompaniesFromAccount() {
         Account account = accountService.getAccountLoggedIn();
         return account.getCompanies();
     }
@@ -50,10 +52,24 @@ public class CompanyService {
         Long companyId = ((CredentialAccount) authentication.getCredentials()).getCompanyId();
 
         if (companyId != null) {
-                return companyDAO.findById(companyId).orElse(null);
+            return companyDAO.findById(companyId).orElse(null);
         }
 
         throw new CompanyNotLoggedInException(messageService.getMessage("tartarus.company.not-logged-in"));
     }
+
+    public Company create(SaveCompanyDTO companyDTO) {
+        Company company = new Company();
+        company.setCompanyFromdDTO(companyDTO);
+        return companyDAO.save(company);
+    }
+
+
+    public Company update(SaveCompanyDTO companyDTO) throws CompanyNotLoggedInException {
+        Company company = this.getCompanyLoggedIn();
+        company.setCompanyFromdDTO(companyDTO);
+        return companyDAO.save(company);
+    }
+
 
 }

@@ -1,9 +1,10 @@
 package br.com.elysian.tartarus.service;
 
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
-import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
-import br.com.elysian.tartarus.dto.v1.SuccessDTO;
+import br.com.elysian.tartarus.dto.v1.*;
 import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
+import br.com.elysian.tartarus.exception.MismatchedPasswordsException;
+import br.com.elysian.tartarus.exception.NewPasswordEqualsOldPasswordException;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Confirmation;
 import br.com.elysian.tartarus.model.ConfirmationType;
@@ -12,6 +13,7 @@ import br.com.elysian.tartarus.repository.ConfirmationDAO;
 import br.com.elysian.tartarus.repository.ConfirmationTypeDAO;
 import br.com.elysian.tartarus.repository.RoleDAO;
 import br.com.elysian.tartarus.repository.AccountDAO;
+import br.com.elysian.tartarus.utils.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -108,4 +110,37 @@ public class AccountService {
 
         return accountDAO.findById(idUser).orElse(null);
     }
+
+
+    public Account saveAccount(SaveAccountDTO accountDTO) {
+        Account account = this.getAccountLoggedIn();
+        account.setAccountFromDTO(accountDTO);
+
+        return accountDAO.save(account);
+    }
+
+
+    public Account updatePassword(SavePasswordDTO passwordDTO) throws MismatchedPasswordsException, NewPasswordEqualsOldPasswordException {
+        Account account = this.getAccountLoggedIn();
+
+        String oldPassword = passwordDTO.getOldPassword();
+        String newPassword = passwordDTO.getNewPassword();
+
+
+        if (!oldPassword.equals(newPassword)) {
+
+            if (PasswordUtils.verifyPassword(oldPassword, account.getPassword())) {
+                account.setPassword(PasswordUtils.hashPassword(newPassword));
+
+                return accountDAO.save(account);
+            }
+
+            throw new MismatchedPasswordsException(messageService.getMessage("tartarus.validations.mismatched-passwords"));
+
+        }
+
+        throw new NewPasswordEqualsOldPasswordException(messageService.getMessage("tartarus.validations.old-password-equals-new-password"));
+
+    }
+
 }

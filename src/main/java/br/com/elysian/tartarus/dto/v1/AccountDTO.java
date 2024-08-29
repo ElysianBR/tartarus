@@ -12,7 +12,7 @@ import java.util.Set;
 
 @Getter
 @NoArgsConstructor
-public class AccountLoggedInDTO {
+public class AccountDTO {
 
     private boolean active;
     private boolean enable;
@@ -22,7 +22,7 @@ public class AccountLoggedInDTO {
     private String email;
     private final Set<RoleDTO> accountRoles = new HashSet<>();
 
-    public AccountLoggedInDTO(Account account) {
+    public AccountDTO(Account account) {
         this.active = account.isActive();
         this.enable = account.isEnable();
         this.firstName = account.getFirstName();

@@ -3,6 +3,7 @@ package br.com.elysian.tartarus.controller.api.v1.blockchain;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.NetworkDTO;
 import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
+import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.exception.NetworkNotFoundException;
 import br.com.elysian.tartarus.exception.NetworkNotLoggedInException;
 import br.com.elysian.tartarus.model.CompanyNetwork;
@@ -66,7 +67,7 @@ public class NetworkController {
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @PostMapping("/with")
-    public ResponseEntity<TokenDTO> networkWith(@RequestParam("tag") String networkTag, HttpServletResponse response) throws NetworkNotFoundException {
+    public ResponseEntity<TokenDTO> networkWith(@RequestParam("tag") String networkTag, HttpServletResponse response) throws NetworkNotFoundException, InvalidUsernameOrPasswordException {
         // TODO: Implementation for validation if account is registered in network selected!!
         networkService.with(networkTag);
 

@@ -1,11 +1,7 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.dto.v1.AccountLoggedInDTO;
-import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
-import br.com.elysian.tartarus.dto.v1.SuccessDTO;
-import br.com.elysian.tartarus.dto.v1.TokenDTO;
-import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
-import br.com.elysian.tartarus.exception.ReCaptchaException;
+import br.com.elysian.tartarus.dto.v1.*;
+import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.AccountService;
@@ -44,17 +40,17 @@ public class AccountController {
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping()
-    public ResponseEntity<AccountLoggedInDTO> getAccount() {
+    public ResponseEntity<AccountDTO> getAccount() {
         return ResponseEntity.ok(
-                new AccountLoggedInDTO(
+                new AccountDTO(
                         accountService.getAccountLoggedIn()
                 )
         );
     }
 
 
-    @PostMapping("/create-account")
-    public ResponseEntity<TokenDTO> createAccount(@Valid @RequestBody RegistrationDTO registrationDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException {
+    @PostMapping("/create")
+    public ResponseEntity<TokenDTO> createAccount(@Valid @RequestBody RegistrationDTO registrationDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException, InvalidUsernameOrPasswordException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);
@@ -69,11 +65,41 @@ public class AccountController {
 
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping("/confirm-account")
+    @PostMapping("/confirm")
     public ResponseEntity<SuccessDTO> confirmAccount(@RequestParam("sequenceToken") String sequenceToken) {
         return ResponseEntity.ok(
                 accountService.confirmAccount(sequenceToken)
         );
+    }
+
+
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    @PostMapping("/update")
+    public ResponseEntity<AccountDTO> update(@Valid @RequestBody SaveAccountDTO accountDTO) {
+        return ResponseEntity.ok(
+                new AccountDTO(
+                        accountService.saveAccount(accountDTO)
+                )
+        );
+    }
+
+
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    @PostMapping("/update-password")
+    public ResponseEntity<TokenDTO> updatePassword(@Valid @RequestBody SavePasswordDTO savePasswordDTO, HttpServletRequest request, HttpServletResponse response) throws NewPasswordEqualsOldPasswordException, MismatchedPasswordsException, InvalidUsernameOrPasswordException, ReCaptchaUnavailableException, ReCaptchaInvalidException {
+        if (!activeProfile.equals("dev")) {
+            String captchaResponse = request.getHeader("g-recaptcha-response");
+            captchaService.processResponse(captchaResponse);
+        }
+
+        Account account = accountService.updatePassword(savePasswordDTO);
+
+        TokenDTO token = authService.getAuthorization(account);
+        authService.setHeaders(token, response);
+
+        return ResponseEntity.ok(token);
     }
 
 
