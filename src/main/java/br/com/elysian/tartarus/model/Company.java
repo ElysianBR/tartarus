@@ -1,5 +1,6 @@
 package br.com.elysian.tartarus.model;
 
+import br.com.elysian.tartarus.dto.v1.SaveCompanyDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,26 +25,20 @@ public class Company {
     @Column(name = "id")
     private Long id;
 
-
     @Column(name = "active")
     @ColumnDefault("false")
     private boolean active = false;
 
-
     @Column(name = "cnpj", nullable = false, unique = true)
     private String cnpj;
-
 
     @Column(name = "company_name", nullable = false)
     private String companyName;
 
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "company_blockchain",
-            joinColumns = @JoinColumn(name = "company_id"),
-            inverseJoinColumns = @JoinColumn(name = "blockchain_id")
-    )
-    private Set<Blockchain> accountBlockchains;
+    public void setCompanyFromdDTO(SaveCompanyDTO companyDTO) {
+        this.cnpj = companyDTO.getCnpj();
+        this.companyName = companyDTO.getCompanyName();
+    }
 
 }

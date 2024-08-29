@@ -1,6 +1,7 @@
 package br.com.elysian.tartarus.model;
 
 import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
+import br.com.elysian.tartarus.dto.v1.SaveAccountDTO;
 import br.com.elysian.tartarus.utils.PasswordUtils;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
@@ -119,4 +120,13 @@ public class Account {
         this.email = registrationDTO.getEmail();
         this.password = PasswordUtils.hashPassword(registrationDTO.getPassword());
     }
+
+    public void setAccountFromDTO(SaveAccountDTO accountDTO) {
+        // TODO: Implements set Model from dynamic DTO.
+        this.firstName = accountDTO.getFirstName();
+        this.lastName = accountDTO.getLastName();
+        this.email = accountDTO.getEmail();
+        this.dateOfBirth = accountDTO.getDateOfBirth();
+    }
+
 }

@@ -1,48 +1,55 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
-import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
 import br.com.elysian.tartarus.dto.v1.CompanyDTO;
+import br.com.elysian.tartarus.dto.v1.SaveCompanyDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
+import br.com.elysian.tartarus.exception.CompanyNotFoundException;
+import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
+import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.model.Company;
-import br.com.elysian.tartarus.model.util.EntityInfo;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.CompanyService;
-import br.com.elysian.tartarus.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.security.auth.login.CredentialException;
 import java.util.ArrayList;
 import java.util.Set;
 
-@Transactional
 @RestController
 @RequestMapping("/api/v1/company")
 public class CompanyController {
 
     private final CompanyService companyService;
-    private final MessageService messageService;
     private final AuthService authService;
 
-    public CompanyController(CompanyService companyService, MessageService messageService, AuthService authService, EntityInfo entityInfo) {
+    public CompanyController(CompanyService companyService, AuthService authService) {
         this.companyService = companyService;
-        this.messageService = messageService;
         this.authService = authService;
     }
 
+
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
-    @PostMapping("/swith")
-    public ResponseEntity<TokenDTO> swith(@RequestParam("companyId") Long companyId, HttpServletResponse response) {
-        // TODO: Implementar camada de seguranaça para fazer o set da credencial DENTREO do AuthService ou CompanyService, fazendo a validação se de fato o usuário possui acesso a emrpesa.
-        AuthenticationAccount authenticationAccount = authService.getCurrentAuthentication();
-        ((CredentialAccount) authenticationAccount.getCredentials()).setCompanyId(companyId);
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    @GetMapping()
+    public ResponseEntity<CompanyDTO> getCompany() throws CompanyNotLoggedInException {
+        Company company = companyService.getCompanyLoggedIn();
+
+        return ResponseEntity.ok(
+                new CompanyDTO(company)
+        );
+    }
+
+
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    @PostMapping("/with")
+    public ResponseEntity<TokenDTO> with(@RequestParam("companyId") Long companyId, HttpServletResponse response) throws CompanyNotFoundException, InvalidUsernameOrPasswordException {
+        companyService.with(companyId);
 
         TokenDTO token = authService.getAuthorizationByCurrentAuthentication();
         authService.setHeaders(token, response);
@@ -51,10 +58,10 @@ public class CompanyController {
     }
 
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
-    @GetMapping("/getCompanies")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    @GetMapping("/companies")
     public ResponseEntity<ArrayList<CompanyDTO>> getCompanies() {
-        Set<Company> companySet = companyService.getBusinessFromAccount();
+        Set<Company> companySet = companyService.getCompaniesFromAccount();
 
         ArrayList<CompanyDTO> companyDTOS = new ArrayList<>();
         companySet.forEach(business -> {
@@ -66,19 +73,28 @@ public class CompanyController {
         return ResponseEntity.ok(companyDTOS);
     }
 
+
+    @GetMapping("/create")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'ACCOUNT')")
-    @GetMapping("/getCompany")
-    public ResponseEntity<CompanyDTO> getCompany() throws CredentialException {
-        Company company = companyService.getCompanyLoggedIn();
+    public ResponseEntity<CompanyDTO> create(@Valid @RequestBody SaveCompanyDTO companyDTO) {
+        return ResponseEntity.ok(
+                new CompanyDTO(
+                        companyService.create(companyDTO)
+                )
+        );
+    }
 
-        if (company != null) {
-            return ResponseEntity.ok(
-                    new CompanyDTO(company)
-            );
-        }
 
-        throw new CredentialException(messageService.getMessage("tartarus.authorization.company.no-logged-in"));
+    @GetMapping("/update")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyAuthority('BUSINESS_ADMIN')")
+    public ResponseEntity<CompanyDTO> update(@Valid @RequestBody SaveCompanyDTO companyDTO) throws CompanyNotLoggedInException {
+        return ResponseEntity.ok(
+                new CompanyDTO(
+                        companyService.update(companyDTO)
+                )
+        );
     }
 
 

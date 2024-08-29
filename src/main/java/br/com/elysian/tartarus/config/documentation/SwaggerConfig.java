@@ -1,18 +1,11 @@
 package br.com.elysian.tartarus.config.documentation;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.media.StringSchema;
-import io.swagger.v3.oas.models.parameters.Parameter;
-import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,9 +15,9 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Elysian docs",
-                description = "Documentation for Elysian api rest",
+                description = "Elysian documentation API",
                 version = "1.0.0",
-                contact = @Contact(url = "https://elysian.com.br", email = "contato@elysian.com.br")
+                contact = @Contact(name = "Elysian", url = "https://elysian.com.br", email = "development@elysian.com.br")
         ),
         security = @SecurityRequirement(name = "bearerAuth")
 )

@@ -23,7 +23,7 @@ public class Blockchain {
     private Long id;
 
     @Column(name = "active")
-    @ColumnDefault( "true" )
+    @ColumnDefault("true")
     private boolean active = true;
 
     @Column(name = "tag", length = 5, nullable = false, unique = true)
@@ -34,9 +34,5 @@ public class Blockchain {
 
     @Column(name = "description")
     private String description;
-
-    @OneToOne
-    @JoinColumn(name = "type_id", nullable = false)
-    private BlockchainType type;
 
 }

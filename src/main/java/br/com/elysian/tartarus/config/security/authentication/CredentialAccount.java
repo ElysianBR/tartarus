@@ -32,6 +32,9 @@ public class CredentialAccount {
     @Setter
     protected String blockchainTag;
 
+    @Setter
+    protected String networkTag;
+
 
     public CredentialAccount(Account account) {
         this.accountId = account.getId();

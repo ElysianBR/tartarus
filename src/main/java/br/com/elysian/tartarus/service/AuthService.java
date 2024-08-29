@@ -4,6 +4,7 @@ import br.com.elysian.tartarus.config.security.authentication.AuthenticationAcco
 import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
 import br.com.elysian.tartarus.dto.v1.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
+import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.repository.AccountDAO;
@@ -24,12 +25,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -71,11 +72,11 @@ public class AuthService {
             String password = decodedJWT.getClaim("password").asString();
 
             if (email != null && password != null) {
-                boolean existsAccount = accountDAO.existsByEmail(email);
+                Optional<Account> accountOpt = accountDAO.findByEmail(email);
 
-                if (existsAccount) {
+                if (accountOpt.isPresent()) {
 
-                    Account account = accountDAO.findByEmail(email);
+                    Account account = accountOpt.get();
 
                     String passwordAccount = account.getPassword();
 
@@ -135,21 +136,23 @@ public class AuthService {
     }
 
 
-    public TokenDTO getAuthorization(LoginDTO auth) throws UsernameNotFoundException {
-        if (accountDAO.existsByEmail(auth.getEmail())) {
+    public TokenDTO getAuthorization(LoginDTO auth) throws InvalidUsernameOrPasswordException {
+        Optional<Account> accountOpt = accountDAO.findByEmail(auth.getEmail());
 
-            Account account = accountDAO.findByEmail(auth.getEmail());
+        if (accountOpt.isPresent()) {
+
+            Account account = accountOpt.get();
 
             if (PasswordUtils.verifyPassword(auth.getPassword(), account.getPassword())) {
                 return this.getAuthorization(account);
             }
         }
 
-        throw new UsernameNotFoundException(String.format(messageService.getMessage("tartarus.validations.email.password.not-valid"), auth.getEmail()));
+        throw new InvalidUsernameOrPasswordException(String.format(messageService.getMessage("tartarus.validations.email-password-not-valid"), auth.getEmail()));
     }
 
 
-    public TokenDTO getAuthorization(Account account) throws UsernameNotFoundException {
+    public TokenDTO getAuthorization(Account account) throws InvalidUsernameOrPasswordException {
         JwtBuilder builder = jwtService.getBuilder(account);
         this.jwtToken = jwtService.sign(builder);
 
@@ -158,13 +161,15 @@ public class AuthService {
     }
 
 
-    public TokenDTO getAuthorizationByCurrentAuthentication() throws UsernameNotFoundException {
+    public TokenDTO getAuthorizationByCurrentAuthentication() throws InvalidUsernameOrPasswordException {
         AuthenticationAccount auth = this.getCurrentAuthentication();
 
         Long idUser = (Long) auth.getPrincipal();
 
-        if (accountDAO.existsById(idUser)) {
-            Account account = accountDAO.findById(idUser).get();
+        Optional<Account> accountOpt = accountDAO.findById(idUser);
+
+        if (accountOpt.isPresent()) {
+            Account account = accountOpt.get();
 
             JwtBuilder builder = jwtService.getBuilder(account);
             CredentialAccount credential = (CredentialAccount) auth.getCredentials();

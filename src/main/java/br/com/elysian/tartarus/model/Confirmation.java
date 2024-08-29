@@ -1,5 +1,6 @@
 package br.com.elysian.tartarus.model;
 
+import br.com.elysian.tartarus.model.pk.ConfirmationPK;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,6 @@ public class Confirmation {
 
     private static final int MINUTES_EXPIRATION = 10;
 
-    //@JsonBackReference
     @Id
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)

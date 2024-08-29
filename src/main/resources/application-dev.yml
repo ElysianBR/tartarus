@@ -3,3 +3,12 @@ spring:
         password: TARTARUS
         url: jdbc:postgresql://db:5432/TARTARUS
         username: TARTARUS
+
+    jpa:
+        defer-datasource-initialization: true
+        hibernate:
+            ddl-auto: create-drop
+
+    sql:
+        init:
+            data-locations: classpath:sql/data.sql

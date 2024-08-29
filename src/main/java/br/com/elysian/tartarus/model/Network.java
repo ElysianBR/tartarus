@@ -1,0 +1,53 @@
+package br.com.elysian.tartarus.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(schema = "tartarus", name = "network")
+public class Network {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "network_id", sequenceName = "network_id_seq", schema = "tartarus")
+    @Column(name = "id", length = 10)
+    private Long id;
+
+    @Column(name = "network_url", nullable = false)
+    private String networkUrl;
+
+    @Column(name = "active")
+    @ColumnDefault("true")
+    private boolean active = true;
+
+    @Column(name = "tag", length = 5, nullable = false, unique = true)
+    private String tag;
+
+    @Column(name = "name", length = 50, nullable = false)
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    @OneToOne
+    @JoinColumn(name = "type_id", nullable = false)
+    private NetworkType type;
+
+    @OneToOne
+    @JoinColumn(name = "blockchain_id")
+    private Blockchain blockchain;
+
+
+    public String getNetworkNameFormated() {
+        return tag + " - " + name;
+    }
+
+}
