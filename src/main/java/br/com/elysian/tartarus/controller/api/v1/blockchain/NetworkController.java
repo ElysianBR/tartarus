@@ -10,8 +10,6 @@ import br.com.elysian.tartarus.model.CompanyNetwork;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -34,9 +32,8 @@ public class NetworkController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping()
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<NetworkDTO> getNetwork() throws CompanyNotLoggedInException, NetworkNotLoggedInException, NetworkNotFoundException {
         CompanyNetwork companyNetwork = networkService.getCompanyNetworkLoggedIn();
 
@@ -46,27 +43,24 @@ public class NetworkController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping("/registered-networks")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<ArrayList<NetworkDTO>> getRegisteredNetworks() {
         ArrayList<NetworkDTO> networks = networkService.getRegisteredNetworks();
         return ResponseEntity.ok(networks);
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping("/available-networks")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<ArrayList<NetworkDTO>> getAvailableNetworks() {
         ArrayList<NetworkDTO> networks = networkService.getAvailableNetworks();
         return ResponseEntity.ok(networks);
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @PostMapping("/with")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<TokenDTO> networkWith(@RequestParam("tag") String networkTag, HttpServletResponse response) throws NetworkNotFoundException, InvalidUsernameOrPasswordException {
         // TODO: Implementation for validation if account is registered in network selected!!
         networkService.with(networkTag);

@@ -2,6 +2,7 @@ package br.com.elysian.tartarus.config.security;
 
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationFilter;
 import br.com.elysian.tartarus.service.AuthService;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,12 @@ public class WebSecurityConfig {
 
     private AuthService authService;
 
+    @Getter
+    private static final String[] NO_AUTH_PATHS = new String[]{
+            "/swagger/**", "/swagger-ui/**", "/api-docs/**",
+            "/error", "/api/v1/auth/**", "/api/v1/account/create"
+    };
+
     @Autowired
     public WebSecurityConfig(AuthService authService) {
         this.authService = authService;
@@ -31,8 +38,7 @@ public class WebSecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
-                "/swagger/**", "/swagger-ui/**", "/api-docs/**",
-                "/error", "/api/v1/auth/**", "/api/v1/account/createAccount"
+                WebSecurityConfig.NO_AUTH_PATHS
         );
     }
 

@@ -7,8 +7,6 @@ import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.service.blockchain.ContractService;
 import br.com.elysian.tartarus.service.blockchain.ethereum.EtherService;
 import br.com.elysian.tartarus.service.blockchain.ethereum.SupplyChainService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,9 +36,8 @@ public class SupplyChainController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @PostMapping("/deployAll")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<ArrayList<ContractDeployDTO>> deployAll(@RequestParam(value = "gasLimitPerContract", required = false) BigInteger gasLimitPerContract) throws Exception {
         return ResponseEntity.ok(
                 new ArrayList<>(
@@ -50,9 +47,8 @@ public class SupplyChainController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @PostMapping("/register-consumers-access")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<TransactionReceipt> registerConsumersAccess(@RequestParam("consumerAddress") String consumerAddress, @RequestParam("access") String access) throws Exception {
         CompanyNetworkContract companyNetworkContract = contractService.getNetworkContract("SupplyChainBase", "v1");
         SupplyChainBase supplyChainBase = etherService.getNetworkClient().getContractInstance(companyNetworkContract);

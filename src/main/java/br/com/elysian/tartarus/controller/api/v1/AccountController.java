@@ -6,8 +6,6 @@ import br.com.elysian.tartarus.model.Account;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.AccountService;
 import br.com.elysian.tartarus.service.captcha.CaptchaService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -37,9 +35,8 @@ public class AccountController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping()
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<AccountDTO> getAccount() {
         return ResponseEntity.ok(
                 new AccountDTO(
@@ -64,7 +61,6 @@ public class AccountController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/confirm")
     public ResponseEntity<SuccessDTO> confirmAccount(@RequestParam("sequenceToken") String sequenceToken) {
         return ResponseEntity.ok(
@@ -73,9 +69,8 @@ public class AccountController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @PostMapping("/update")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<AccountDTO> update(@Valid @RequestBody SaveAccountDTO accountDTO) {
         return ResponseEntity.ok(
                 new AccountDTO(
@@ -85,9 +80,8 @@ public class AccountController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @PostMapping("/update-password")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<TokenDTO> updatePassword(@Valid @RequestBody SavePasswordDTO savePasswordDTO, HttpServletRequest request, HttpServletResponse response) throws NewPasswordEqualsOldPasswordException, MismatchedPasswordsException, InvalidUsernameOrPasswordException, ReCaptchaUnavailableException, ReCaptchaInvalidException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
