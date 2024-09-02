@@ -32,31 +32,36 @@ public class ContractService {
     }
 
 
-    public CompanyNetworkContract getNetworkContract(String contractName, String version) throws ContractNotFoundException, NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, NetworkContractNotRegistered {
+    public Contract getContract(String contractName, String version) throws ContractNotFoundException {
         ContractPK contractPK = new ContractPK(contractName, version);
         Optional<Contract> contractOpt = contractDAO.findById(contractPK);
 
         if (contractOpt.isPresent()) {
-
-            Contract contract = contractOpt.get();
-
-            CompanyNetwork companyNetwork = networkService.getCompanyNetworkLoggedIn();
-
-            //            CompanyNetworkPK companyNetworkPK = new CompanyNetworkPK(companyNetwork.getCompany(), companyNetwork.getNetwork());
-            //            CompanyNetworkContractPK companyNetworkContractPK = new CompanyNetworkContractPK(companyNetworkPK, contractPK);
-
-            CompanyNetworkContractPK companyNetworkContractPK = new CompanyNetworkContractPK(companyNetwork, contract);
-
-            Optional<CompanyNetworkContract> companyNetworkContract = networkContractDAO.findById(companyNetworkContractPK);
-            if (companyNetworkContract.isPresent()) {
-                return companyNetworkContract.get();
-            }
-
-
-            throw new NetworkContractNotRegistered(String.format(messageService.getMessage("tartarus.blockchain.contract.not-registered-in-company"), contractName, version,  companyNetwork.getNetwork().getNetworkNameFormated()));
+            return contractOpt.get();
         }
 
         throw new ContractNotFoundException(String.format(messageService.getMessage("tartarus.blockchain.contract.not-found"), contractName, version));
+    }
+
+
+    public CompanyNetworkContract getNetworkContract(String contractName, String version) throws ContractNotFoundException, NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, NetworkContractNotRegistered {
+        Contract contract = this.getContract(contractName, version);
+
+        CompanyNetwork companyNetwork = networkService.getCompanyNetworkLoggedIn();
+
+        //            CompanyNetworkPK companyNetworkPK = new CompanyNetworkPK(companyNetwork.getCompany(), companyNetwork.getNetwork());
+        //            CompanyNetworkContractPK companyNetworkContractPK = new CompanyNetworkContractPK(companyNetworkPK, contractPK);
+
+        CompanyNetworkContractPK companyNetworkContractPK = new CompanyNetworkContractPK(companyNetwork, contract);
+
+        Optional<CompanyNetworkContract> companyNetworkContract = networkContractDAO.findById(companyNetworkContractPK);
+        if (companyNetworkContract.isPresent()) {
+            return companyNetworkContract.get();
+        }
+
+
+        throw new NetworkContractNotRegistered(String.format(messageService.getMessage("tartarus.blockchain.contract.not-registered-in-company"), contractName, version, companyNetwork.getNetwork().getNetworkNameFormated()));
+
     }
 
 }

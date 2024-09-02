@@ -1,21 +1,26 @@
 package br.com.elysian.tartarus.controller.api.v1.blockchain;
 
+import br.com.elysian.tartarus.dto.v1.SuccessDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.NetworkDTO;
-import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
-import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
-import br.com.elysian.tartarus.exception.NetworkNotFoundException;
-import br.com.elysian.tartarus.exception.NetworkNotLoggedInException;
+import br.com.elysian.tartarus.dto.v1.blockchain.SavePrivateKeyDTO;
+import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetwork;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 @RestController
@@ -69,6 +74,15 @@ public class NetworkController {
         authService.setHeaders(token, response);
 
         return ResponseEntity.ok(token);
+    }
+
+
+    @PostMapping("/save-private-key")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public ResponseEntity<SuccessDTO> savePrivateKey(@Valid @RequestBody SavePrivateKeyDTO savePrivateKeyDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkNotFoundException {
+        return ResponseEntity.ok(
+                networkService.savePrivateKey(savePrivateKeyDTO)
+        );
     }
 
 }

@@ -1,31 +1,28 @@
 package br.com.elysian.tartarus.service.blockchain;
 
-import br.com.elysian.tartarus.blockchain.contracts.ethereum.v1.SupplyChainBase;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
+import br.com.elysian.tartarus.service.MessageService;
 import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.RemoteCall;
+import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.StaticGasProvider;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 
 public class NetworkClient {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkClient.class);
-    private @Value("#{messageService.getMessage('tartarus.blockchain.ethereum.unable.create.contract.instance')}") String instanceFail;
-    private @Value("#{messageService.getMessage('tartarus.blockchain.contract.class-is-not-contract')}") String classIsNotContract;
+    private final MessageService messageService;
 
+    @Getter
+    private final Credentials credentials;
     @Getter
     private final Web3j web3j;
     @Getter
@@ -33,16 +30,19 @@ public class NetworkClient {
     @Getter
     private BigInteger maxGasWei;
 
-
-    public NetworkClient(Web3j web3j, TransactionManager transactionManager) {
+    public NetworkClient(Credentials credentials, Web3j web3j, TransactionManager transactionManager, MessageService messageService) {
+        this.credentials = credentials;
         this.web3j = web3j;
         this.transactionManager = transactionManager;
+        this.messageService = messageService;
     }
 
-    public NetworkClient(Web3j web3j, TransactionManager transactionManager, BigInteger maxGasWei) {
+    public NetworkClient(Credentials credentials, Web3j web3j, TransactionManager transactionManager, BigInteger maxGasWei, MessageService messageService) {
+        this.credentials = credentials;
         this.web3j = web3j;
         this.transactionManager = transactionManager;
         this.maxGasWei = maxGasWei;
+        this.messageService = messageService;
     }
 
 
@@ -62,13 +62,11 @@ public class NetworkClient {
 
         } catch (ClassNotFoundException e) {
 
-            LOGGER.error(instanceFail, e);
-
-            throw new ContractInstantiationFailed(instanceFail, e);
+            throw new ContractInstantiationFailed(messageService.getMessage("tartarus.blockchain.ethereum.unable.create.contract.instance"), e);
 
         } catch (ClassCastException cce) {
 
-            throw new ContractInstantiationFailed(String.format(classIsNotContract, className));
+            throw new ContractInstantiationFailed(String.format(messageService.getMessage("tartarus.blockchain.contract.class-is-not-contract"), className));
 
         }
     }
@@ -89,9 +87,7 @@ public class NetworkClient {
 
         } catch (Exception e) {
 
-            LOGGER.error(instanceFail, e);
-
-            throw new ContractInstantiationFailed(instanceFail, e);
+            throw new ContractInstantiationFailed(messageService.getMessage("tartarus.blockchain.ethereum.unable.create.contract.instance"), e);
 
         }
     }
@@ -125,24 +121,29 @@ public class NetworkClient {
     }
 
 
-    public <T extends Contract> T deployContract(Class<T> clazz, StaticGasProvider gasProvider) throws ContractInstantiationFailed {
+    public <T extends Contract> T deployContract(Class<T> clazz, StaticGasProvider gasProvider) throws ContractInstantiationFailed, TransactionException {
         try {
             T instance = this.getContractInstance(clazz, gasProvider);
 
             Method methodDeploy = clazz.getMethod("deploy", Web3j.class, TransactionManager.class, ContractGasProvider.class);
 
+
+
+
             return ((RemoteCall<T>) methodDeploy.invoke(instance, web3j, transactionManager, gasProvider)).send();
+        } catch (TransactionException te) {
+
+            throw te;
+
         } catch (Exception e) {
 
-            LOGGER.error(instanceFail, e);
-
-            throw new ContractInstantiationFailed(instanceFail, e);
+            throw new ContractInstantiationFailed(messageService.getMessage("tartarus.blockchain.ethereum.unable.create.contract.instance"), e);
 
         }
     }
 
 
-    public <T extends Contract> T deployContract(String className, StaticGasProvider gasProvider) throws ContractInstantiationFailed {
+    public <T extends Contract> T deployContract(String className, StaticGasProvider gasProvider) throws ContractInstantiationFailed, TransactionException {
         Class<T> clazz = this.getContractClass(className);
         return this.deployContract(clazz, gasProvider);
     }

@@ -29,7 +29,4 @@ public class Contract {
     @Column(name = "className", unique = true)
     private String className;
 
-    @Column(name = "gas_price_wei", nullable = false)
-    private BigInteger gasPriceWei = BigInteger.ZERO;
-
 }

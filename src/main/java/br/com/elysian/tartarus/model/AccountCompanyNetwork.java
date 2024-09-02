@@ -16,7 +16,7 @@ import java.math.BigInteger;
 @Entity
 @IdClass(CompanyNetworkAccountPK.class)
 @Table(schema = "tartarus", name = "account_company_network")
-public class CompanyNetworkAccount {
+public class AccountCompanyNetwork {
 
     @Id
     @OneToOne
@@ -29,6 +29,10 @@ public class CompanyNetworkAccount {
 
     @Column(name = "address")
     private String address;
+
+
+    @Column(name = "private")
+    private String privateKey;
 
 
     @Column(name = "max_gas_wei", nullable = false)

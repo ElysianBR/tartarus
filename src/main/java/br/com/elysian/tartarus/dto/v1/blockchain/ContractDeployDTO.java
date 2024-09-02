@@ -24,7 +24,6 @@ public class ContractDeployDTO {
         networkId = companyNetworkContract.getCompanyNetwork().getNetwork().getId();
         contractName = companyNetworkContract.getContract().getName();
         version = companyNetworkContract.getContract().getVersion();
-        gasPriceWei = companyNetworkContract.getContract().getGasPriceWei();
         maxGasWei = companyNetworkContract.getMaxGasWei();
         contractAddress = companyNetworkContract.getContractAddress();
     }
