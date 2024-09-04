@@ -3,6 +3,7 @@ package br.com.elysian.tartarus.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.client5.http.async.methods.SimpleRequestBuilder;
@@ -12,6 +13,7 @@ import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
 import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.ClientTlsStrategyBuilder;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.nio.ssl.TlsStrategy;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.ssl.TrustStrategy;
@@ -61,19 +63,40 @@ public class InfuraUtils {
                     String.format("%s/%s", url, key)
             ).build();
 
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            req.setBody(
+                    objectMapper.writeValueAsString(
+                            new InfuraBody(
+                                    1,
+                                    "2.0",
+                                    "eth_gasPrice",
+                                    new String[]{}
+                            )
+                    ),
+                    ContentType.APPLICATION_JSON
+            );
+
+            // Start client
+            httpClient.start();
+
             Future<SimpleHttpResponse> future = httpClient.execute(req, null);
             SimpleHttpResponse response = future.get();
 
             int statusCode = response.getCode();
             if (statusCode == 200) {
-                String outBody = response.getBodyText();
-                ObjectMapper objectMapper = new ObjectMapper();
-                return new BigInteger(
-                        objectMapper.readValue(
-                                outBody,
-                                InfuraResponse.class
-                        ).getResult()
-                );
+                String hexGas = objectMapper
+                        .readValue(
+                                response.getBodyText(),
+                                InfuraBody.class
+                        )
+                        .getResult();
+
+                if (hexGas.startsWith("0x")) {
+                    hexGas = hexGas.substring(2);
+                }
+
+                return new BigInteger(hexGas, 16);
             }
 
             throw new IOException("Request fail. Status Code: " + statusCode);
@@ -91,28 +114,36 @@ public class InfuraUtils {
         BigInteger gasPrice = this.getGasPrice();
 
         // Increment percent of gas price
-        final BigDecimal HUNDRED = new BigDecimal(100);
-        BigDecimal maxPercentDecimal = maxGasPercentUnderGasPrice.divide(HUNDRED, RoundingMode.HALF_UP);
-        BigDecimal gasPriceDecimal = new BigDecimal(gasPrice);
-        BigDecimal increment = gasPriceDecimal.multiply(maxPercentDecimal);
-        BigInteger incrementBigInt = increment.toBigInteger();
-        BigInteger maxGas = gasPrice.add(incrementBigInt);
+        BigDecimal maxPercentDecimal = maxGasPercentUnderGasPrice.divide(BlockchainUtils.HUNDRED, RoundingMode.HALF_UP);
 
-        return new StaticGasProvider(gasPrice, maxGas);
+        BigDecimal percent = BigDecimal.ONE.add(maxPercentDecimal);
+        BigDecimal maxGasPrice = new BigDecimal(gasPrice).multiply(percent);
+        return new StaticGasProvider(gasPrice, maxGasPrice.toBigInteger());
     }
 
 
     public ContractGasProvider getGasProvider() throws IOException, ExecutionException, InterruptedException {
-        return this.getGasProvider(BigInteger.ONE);
+        return this.getGasProvider(BigDecimal.ONE);
     }
 
 }
 
 @Getter
-class InfuraResponse {
+@NoArgsConstructor
+class InfuraBody {
 
-    private String jsonrpc;
     private int id;
+    private String jsonrpc;
+    private String method;
+    private String[] params;
+
     private String result;
+
+    public InfuraBody(int id, String jsonrpc, String method, String[] params) {
+        this.id = id;
+        this.jsonrpc = jsonrpc;
+        this.method = method;
+        this.params = params;
+    }
 
 }

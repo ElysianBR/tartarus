@@ -3,6 +3,7 @@ package br.com.elysian.tartarus.service.blockchain;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.service.MessageService;
+import br.com.elysian.tartarus.utils.BlockchainUtils;
 import br.com.elysian.tartarus.utils.InfuraUtils;
 import lombok.Getter;
 import org.web3j.crypto.Credentials;
@@ -104,8 +105,6 @@ public class NetworkClient {
             Method methodDeploy = clazz.getMethod("deploy", Web3j.class, TransactionManager.class, ContractGasProvider.class);
 
 
-
-
             return ((RemoteCall<T>) methodDeploy.invoke(instance, web3j, transactionManager, gasProvider)).send();
         } catch (TransactionException te) {
 
@@ -119,9 +118,19 @@ public class NetworkClient {
     }
 
 
+    public <T extends Contract> T deployContract(Class<T> clazz) throws ContractInstantiationFailed, TransactionException, IOException {
+        return this.deployContract(clazz, BlockchainUtils.getGasProvider(this.web3j));
+    }
+
+
     public <T extends Contract> T deployContract(String className, ContractGasProvider gasProvider) throws ContractInstantiationFailed, TransactionException {
         Class<T> clazz = this.getContractClass(className);
         return this.deployContract(clazz, gasProvider);
+    }
+
+
+    public <T extends Contract> T deployContract(String clazz) throws ContractInstantiationFailed, TransactionException, IOException {
+        return this.deployContract(clazz, BlockchainUtils.getGasProvider(this.web3j));
     }
 
 }

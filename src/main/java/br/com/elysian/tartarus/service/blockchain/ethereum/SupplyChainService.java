@@ -90,7 +90,7 @@ public class SupplyChainService {
         return new AbstractMap.SimpleEntry<>(deployDTO, deployOut);
     }
 
-    private Map.Entry<ContractDeployDTO, InventoryManagement> deployInventoryManagement(String version, DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, ContractNotFoundException, NetworkNotFoundException, NetworkContractNotRegistered, AccountNotRegisteredInCompanyNetworkException, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
+    private Map.Entry<ContractDeployDTO, InventoryManagement> deployInventoryManagement(String version, DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, ContractNotFoundException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
         Contract contract = contractService.getContract("InventoryManagement", version);
         InventoryManagement deployOut = this.deploy(deployContractDTO.getPassword(), InventoryManagement.class, contract, deployContractDTO.getGasLimitPerContract());
         ContractDeployDTO deployDTO = this.saveDeployInDB(deployOut, contract);
@@ -98,7 +98,7 @@ public class SupplyChainService {
     }
 
 
-    private <T extends org.web3j.tx.Contract> ContractDeployDTO saveDeployInDB(T deployOut, Contract contract) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException {
+    private <T extends org.web3j.tx.Contract> ContractDeployDTO saveDeployInDB(T deployOut, Contract contract) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException {
         CompanyNetwork companyNetwork = networkService.getCompanyNetworkLoggedIn();
         String contractAddress = deployOut.getContractAddress();
 
@@ -109,13 +109,9 @@ public class SupplyChainService {
     }
 
 
-    private <T extends org.web3j.tx.Contract> T deploy(String password, Class<T> clazz, Contract contract, BigInteger gasLimit) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, ContractNotFoundException, NetworkContractNotRegistered, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException, ExecutionException, InterruptedException {
+    private <T extends org.web3j.tx.Contract> T deploy(String password, Class<T> clazz, Contract contract, BigInteger gasLimit) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
         NetworkClient networkClient = etherService.getNetworkClient(password);
-        String infuraUrl = networkService.getCompanyNetworkLoggedIn().getNetwork().getInfuraUrl();
-        String infuraKey = networkService.getCompanyNetworkLoggedIn().getNetwork().getBlockchain().getInfuraKey();
-        InfuraUtils infuraUtils = new InfuraUtils(infuraUrl, infuraKey);
-        ContractGasProvider gasProvider = infuraUtils.getGasProvider();
-        return networkClient.deployContract(clazz, gasProvider);
+        return networkClient.deployContract(clazz);
     }
 
 }
