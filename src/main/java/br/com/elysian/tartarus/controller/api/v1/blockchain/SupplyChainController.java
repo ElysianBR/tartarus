@@ -22,9 +22,12 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/v1/blockchain/supply-chain")
@@ -44,9 +47,10 @@ public class SupplyChainController {
 
 
     @Async
+    @Deprecated
     @PostMapping("/deployAll")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public CompletableFuture<ResponseEntity<ArrayList<ContractDeployDTO>>> deployAll(@RequestBody DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkContractNotRegistered, ContractInstantiationFailed, TransactionException, ContractNotFoundException, NetworkNotFoundException, PrivateKeyNotSet, IOException {
+    public CompletableFuture<ResponseEntity<ArrayList<ContractDeployDTO>>> deployAll(@RequestBody DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkContractNotRegistered, ContractInstantiationFailed, TransactionException, ContractNotFoundException, NetworkNotFoundException, PrivateKeyNotSet, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
         // TODO: Implements security validation for user persist de private key encrypted with password and send only password for validation in DB.
 
         return CompletableFuture.completedFuture(ResponseEntity.ok(

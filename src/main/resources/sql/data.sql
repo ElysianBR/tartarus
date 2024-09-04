@@ -73,12 +73,13 @@ SELECT 2,
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".confirmation_type WHERE id = 2);
 
 
-INSERT INTO "tartarus".blockchain(id, active, name, tag, description)
+INSERT INTO "tartarus".blockchain(id, active, name, tag, description, infura_key)
 SELECT 1,
        true,
        'Ethereum',
        'ETH',
-       'Ethereum Blockchain (Powered by EVM)'
+       'Ethereum Blockchain (Powered by EVM)',
+       '3d68fcabd2e8418991dd69df8082a322'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".blockchain WHERE id = 1);
 
 
@@ -94,7 +95,7 @@ SELECT 2,
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".network_type WHERE id = 2);
 
 
-INSERT INTO "tartarus".network(active, type_id, tag, blockchain_id, id, name, description, network_url)
+INSERT INTO "tartarus".network(active, type_id, tag, blockchain_id, id, name, description, network_url, infura_url)
 SELECT true,
        1,
        'SEPOL',
@@ -102,7 +103,8 @@ SELECT true,
        1,
        'Sepolia ETH',
        'Testnet Ethereum for development',
-       'https://rpc.sepolia.org'
+       'https://rpc.sepolia.org',
+       'https://sepolia.infura.io/v3'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".network WHERE id = 1);
 
 

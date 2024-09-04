@@ -35,4 +35,7 @@ public class Blockchain {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "infura_key")
+    private String infuraKey;
+
 }

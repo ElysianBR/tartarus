@@ -5,6 +5,7 @@ import br.com.elysian.tartarus.model.*;
 import br.com.elysian.tartarus.service.MessageService;
 import br.com.elysian.tartarus.service.blockchain.NetworkClient;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
+import br.com.elysian.tartarus.utils.InfuraUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Credentials;
@@ -21,6 +22,8 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
 @Service
@@ -37,29 +40,29 @@ public class EtherService {
     }
 
 
-    public NetworkClient getNetworkClient(String password, AccountCompanyNetwork accountCompanyNetwork) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkNotFoundException, PrivateKeyNotSet, IOException {
+    public NetworkClient getNetworkClient(String password, AccountCompanyNetwork accountCompanyNetwork) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkNotFoundException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
         String privateKey = networkService.getPrivateKey(password);
         Credentials credentials = Credentials.create(privateKey);
         return this.getNetworkClient(credentials, accountCompanyNetwork);
     }
 
 
-    public NetworkClient getNetworkClient(AccountCompanyNetwork accountCompanyNetwork) throws IOException {
+    public NetworkClient getNetworkClient(AccountCompanyNetwork accountCompanyNetwork) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         return this.getNetworkClient((Credentials) null, accountCompanyNetwork);
     }
 
 
-    public NetworkClient getNetworkClient(String password) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException {
+    public NetworkClient getNetworkClient(String password) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
         return this.getNetworkClient(password, networkService.getAccountCompanyNetworkLoggedIn());
     }
 
 
-    public NetworkClient getNetworkClient() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, IOException {
+    public NetworkClient getNetworkClient() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         return this.getNetworkClient(networkService.getAccountCompanyNetworkLoggedIn());
     }
 
 
-    private NetworkClient getNetworkClient(Credentials credentials, AccountCompanyNetwork accountCompanyNetwork) throws IOException {
+    private NetworkClient getNetworkClient(Credentials credentials, AccountCompanyNetwork accountCompanyNetwork) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 
         String url = accountCompanyNetwork.getCompanyNetwork().getNetwork().getNetworkUrl();
         Web3j web3j = Web3j.build(new HttpService(url));
@@ -78,7 +81,12 @@ public class EtherService {
             transactionManager = new RawTransactionManager(web3j, credentials, chainId);
         }
 
-        return new NetworkClient(credentials, web3j, transactionManager, maxGasWei, messageService);
+
+        String infuraUrl = accountCompanyNetwork.getCompanyNetwork().getNetwork().getInfuraUrl();
+        String infuraKey = accountCompanyNetwork.getCompanyNetwork().getNetwork().getBlockchain().getInfuraKey();
+        InfuraUtils infuraUtils = new InfuraUtils(infuraUrl, infuraKey);
+
+        return new NetworkClient(credentials, web3j, transactionManager, infuraUtils, messageService);
     }
 
 

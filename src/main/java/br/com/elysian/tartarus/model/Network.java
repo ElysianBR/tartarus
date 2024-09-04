@@ -45,6 +45,9 @@ public class Network {
     @JoinColumn(name = "blockchain_id")
     private Blockchain blockchain;
 
+    @Column(name = "infura_url")
+    private String infuraUrl;
+
 
     public String getNetworkNameFormated() {
         return tag + " - " + name;

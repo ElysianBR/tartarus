@@ -3,6 +3,7 @@ package br.com.elysian.tartarus.service.blockchain;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.service.MessageService;
+import br.com.elysian.tartarus.utils.InfuraUtils;
 import lombok.Getter;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -11,15 +12,20 @@ import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
-import org.web3j.tx.gas.StaticGasProvider;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.ExecutionException;
 
 public class NetworkClient {
 
     private final MessageService messageService;
+    private final InfuraUtils infuraUtils;
 
     @Getter
     private final Credentials credentials;
@@ -27,31 +33,13 @@ public class NetworkClient {
     private final Web3j web3j;
     @Getter
     private final TransactionManager transactionManager;
-    @Getter
-    private BigInteger maxGasWei;
 
-    public NetworkClient(Credentials credentials, Web3j web3j, TransactionManager transactionManager, MessageService messageService) {
+    public NetworkClient(Credentials credentials, Web3j web3j, TransactionManager transactionManager, InfuraUtils infuraUtils, MessageService messageService) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         this.credentials = credentials;
         this.web3j = web3j;
         this.transactionManager = transactionManager;
         this.messageService = messageService;
-    }
-
-    public NetworkClient(Credentials credentials, Web3j web3j, TransactionManager transactionManager, BigInteger maxGasWei, MessageService messageService) {
-        this.credentials = credentials;
-        this.web3j = web3j;
-        this.transactionManager = transactionManager;
-        this.maxGasWei = maxGasWei;
-        this.messageService = messageService;
-    }
-
-
-    private BigInteger getMaxGasLimit(CompanyNetworkContract companyNetworkContract) {
-        if (maxGasWei != null && maxGasWei.compareTo(BigInteger.ZERO) > 0) {
-            return maxGasWei;
-        }
-
-        return companyNetworkContract.getMaxGasWei();
+        this.infuraUtils = infuraUtils;
     }
 
 
@@ -77,7 +65,7 @@ public class NetworkClient {
     }
 
 
-    private <T extends Contract> T getContractInstance(Class<T> clazz, StaticGasProvider gasProvider) throws ContractInstantiationFailed {
+    private <T extends Contract> T getContractInstance(Class<T> clazz, ContractGasProvider gasProvider) throws ContractInstantiationFailed {
         try {
             Constructor<T> constructor = clazz.getDeclaredConstructor(String.class, Web3j.class, TransactionManager.class, ContractGasProvider.class);
             constructor.setAccessible(true);
@@ -93,35 +81,23 @@ public class NetworkClient {
     }
 
 
-    private <T extends Contract> T getContractInstance(String className, StaticGasProvider gasProvider) throws ContractInstantiationFailed {
+    private <T extends Contract> T getContractInstance(String className, ContractGasProvider gasProvider) throws ContractInstantiationFailed {
         Class<T> clazz = this.getContractClass(className);
         return this.getContractInstance(clazz, gasProvider);
     }
 
 
-    public <T extends Contract> T getContractInstance(CompanyNetworkContract companyNetworkContract) throws ContractInstantiationFailed {
+    public <T extends Contract> T getContractInstance(CompanyNetworkContract companyNetworkContract) throws ContractInstantiationFailed, IOException, ExecutionException, InterruptedException {
         br.com.elysian.tartarus.model.Contract contractModel = companyNetworkContract.getContract();
 
         String className = contractModel.getClassName();
-        BigInteger gasPrice = contractModel.getGasPriceWei();
-        BigInteger gasLimitPrice = this.getMaxGasLimit(companyNetworkContract);
-        StaticGasProvider gasProvider = new StaticGasProvider(gasPrice, gasLimitPrice);
+        ContractGasProvider gasProvider = infuraUtils.getGasProvider(BigInteger.ONE);
 
         return this.getContractInstance(className, gasProvider);
     }
 
 
-    public <T extends Contract> T getContractInstance(br.com.elysian.tartarus.model.Contract contractModel, BigInteger gasLimitPrice) throws ContractInstantiationFailed {
-        String className = contractModel.getClassName();
-
-        BigInteger gasPrice = contractModel.getGasPriceWei();
-        StaticGasProvider gasProvider = new StaticGasProvider(gasPrice, gasLimitPrice);
-
-        return this.getContractInstance(className, gasProvider);
-    }
-
-
-    public <T extends Contract> T deployContract(Class<T> clazz, StaticGasProvider gasProvider) throws ContractInstantiationFailed, TransactionException {
+    public <T extends Contract> T deployContract(Class<T> clazz, ContractGasProvider gasProvider) throws ContractInstantiationFailed, TransactionException {
         try {
             T instance = this.getContractInstance(clazz, gasProvider);
 
@@ -143,7 +119,7 @@ public class NetworkClient {
     }
 
 
-    public <T extends Contract> T deployContract(String className, StaticGasProvider gasProvider) throws ContractInstantiationFailed, TransactionException {
+    public <T extends Contract> T deployContract(String className, ContractGasProvider gasProvider) throws ContractInstantiationFailed, TransactionException {
         Class<T> clazz = this.getContractClass(className);
         return this.deployContract(clazz, gasProvider);
     }
