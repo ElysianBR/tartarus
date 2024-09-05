@@ -61,7 +61,6 @@ public class ContractService {
 
 
         throw new NetworkContractNotRegistered(String.format(messageService.getMessage("tartarus.blockchain.contract.not-registered-in-company"), contractName, version, companyNetwork.getNetwork().getNetworkNameFormated()));
-
     }
 
 }

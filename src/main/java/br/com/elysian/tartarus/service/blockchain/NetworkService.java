@@ -15,17 +15,27 @@ import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.CompanyService;
 import br.com.elysian.tartarus.service.MessageService;
 import br.com.elysian.tartarus.utils.BlockchainUtils;
+import br.com.elysian.tartarus.utils.InfuraUtils;
 import br.com.elysian.tartarus.utils.PasswordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.http.HttpService;
+import org.web3j.tx.ClientTransactionManager;
+import org.web3j.tx.RawTransactionManager;
+import org.web3j.tx.TransactionManager;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -56,6 +66,44 @@ public class NetworkService {
         this.messageService = messageService;
         this.accountCompanyNetworkDAO = accountCompanyNetworkDAO;
     }
+
+
+    private NetworkClient getNetworkClient(Credentials credentials, AccountCompanyNetwork accountCompanyNetwork) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        String url = accountCompanyNetwork.getCompanyNetwork().getNetwork().getNetworkUrl();
+        Web3j web3j = Web3j.build(new HttpService(url));
+
+        String clientAddress = accountCompanyNetwork.getAddress();
+        TransactionManager transactionManager;
+
+        if (credentials == null) {
+            transactionManager = new ClientTransactionManager(web3j, clientAddress);
+        } else {
+            long chainId = web3j.ethChainId().send().getChainId().longValue();
+            transactionManager = new RawTransactionManager(web3j, credentials, chainId);
+        }
+
+        return new NetworkClient(credentials, web3j, transactionManager, messageService);
+    }
+
+
+    public NetworkClient getNetworkClient(String password, AccountCompanyNetwork accountCompanyNetwork) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkNotFoundException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
+        String privateKey = this.getPrivateKey(password);
+        Credentials credentials = Credentials.create(privateKey);
+        return this.getNetworkClient(credentials, accountCompanyNetwork);
+    }
+
+    public NetworkClient getNetworkClient(AccountCompanyNetwork accountCompanyNetwork) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return this.getNetworkClient((Credentials) null, accountCompanyNetwork);
+    }
+
+    public NetworkClient getNetworkClient(String password) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
+        return this.getNetworkClient(password, this.getAccountCompanyNetworkLoggedIn());
+    }
+
+    public NetworkClient getNetworkClient() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return this.getNetworkClient(this.getAccountCompanyNetworkLoggedIn());
+    }
+
 
 
     public void with(String networkTag) throws NetworkNotFoundException {

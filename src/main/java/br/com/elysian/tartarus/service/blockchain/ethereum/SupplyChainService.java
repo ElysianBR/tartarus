@@ -10,15 +10,12 @@ import br.com.elysian.tartarus.dto.v1.blockchain.DeployContractDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.*;
 import br.com.elysian.tartarus.repository.CompanyNetworkContractDAO;
+import br.com.elysian.tartarus.service.MessageService;
 import br.com.elysian.tartarus.service.blockchain.ContractService;
-import br.com.elysian.tartarus.service.blockchain.NetworkClient;
-import br.com.elysian.tartarus.service.blockchain.NetworkService;
-import br.com.elysian.tartarus.utils.InfuraUtils;
+import br.com.elysian.tartarus.service.blockchain.NetworkClientOld;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.exceptions.TransactionException;
-import org.web3j.tx.gas.ContractGasProvider;
-import org.web3j.tx.gas.StaticGasProvider;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -30,75 +27,76 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 
 @Service
 public class SupplyChainService {
 
-    private final EtherService etherService;
+    private final NetworkProvider networkProvider;
     private final ContractService contractService;
     private final NetworkService networkService;
+    private final MessageService messageService;
 
     private final CompanyNetworkContractDAO companyNetworkContractDAO;
 
 
-    @Autowired
-    public SupplyChainService(EtherService etherService, ContractService contractService, NetworkService networkService, CompanyNetworkContractDAO companyNetworkContractDAO) {
-        this.etherService = etherService;
-        this.contractService = contractService;
-        this.networkService = networkService;
-        this.companyNetworkContractDAO = companyNetworkContractDAO;
+    private static final HashMap<String, Map<String, Class<? extends org.web3j.tx.Contract>>> VERSIONS = new HashMap<>();
+
+
+    static {
+        VERSIONS.put("v1", Map.of(
+                "SupplyChainBase", SupplyChainBase.class,
+                "ProductRegistry", ProductRegistry.class,
+                "ProductMovement", ProductMovement.class,
+                "InventoryManagement", InventoryManagement.class
+        ));
     }
 
 
-    public Map<ContractDeployDTO, org.web3j.tx.Contract> deployAll(String version, DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, ContractNotFoundException, NetworkNotFoundException, NetworkContractNotRegistered, AccountNotRegisteredInCompanyNetworkException, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
-        return Map.ofEntries(
+    @Autowired
+    public SupplyChainService(NetworkProvider networkProvider, ContractService contractService, NetworkService networkService, CompanyNetworkContractDAO companyNetworkContractDAO, MessageService messageService) {
+        this.networkProvider = networkProvider;
+        this.contractService = contractService;
+        this.networkService = networkService;
+        this.companyNetworkContractDAO = companyNetworkContractDAO;
+        this.messageService = messageService;
+    }
 
+
+    public Class<? extends org.web3j.tx.Contract> getContract(String contratName, String version) throws ContractNotFoundException {
+        if (VERSIONS.containsKey(version) && VERSIONS.get(version).containsKey(contratName)) {
+            return VERSIONS.get(version).get(contratName);
+        }
+        throw new ContractNotFoundException(messageService.getMessage("tartarus.blockchain.contract.not-found"));
+    }
+
+
+    public Map<ContractDeployDTO, org.web3j.tx.Contract> deployAll(String version, DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, ContractNotFoundException, NetworkNotFoundException, NetworkContractNotRegistered, AccountNotRegisteredInCompanyNetworkException, ContractLoadFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
+        return Map.ofEntries(
                 // TODO: Implements manual transaction DB, for if occurring errors, the beginners contracts persistent
-                this.deploySupplyChainBase(version, deployContractDTO),
-                this.deployProductRegistry(version, deployContractDTO),
-                this.deployProductMovement(version, deployContractDTO),
-                this.deployInventoryManagement(version, deployContractDTO)
+                this.deploy("SupplyChainBase", version, deployContractDTO),
+                this.deploy("ProductRegistry", version, deployContractDTO),
+                this.deploy("ProductMovement", version, deployContractDTO),
+                this.deploy("InventoryManagement", version, deployContractDTO)
         );
     }
 
 
-    private Map.Entry<ContractDeployDTO, SupplyChainBase> deploySupplyChainBase(String version, DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, ContractNotFoundException, NetworkNotFoundException, NetworkContractNotRegistered, AccountNotRegisteredInCompanyNetworkException, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
+    private Map.Entry<ContractDeployDTO, org.web3j.tx.Contract> deploy(String contractName, String version, DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, ContractLoadFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException, ContractNotFoundException {
+        Class<? extends org.web3j.tx.Contract> clazz = this.getContract(contractName, version);
 
-        Contract contract = contractService.getContract("SupplyChainBase", version);
-        SupplyChainBase deployOut = this.deploy(deployContractDTO.getPassword(), SupplyChainBase.class, contract,  deployContractDTO.getGasLimitPerContract());
-        ContractDeployDTO deployDTO = this.saveDeployInDB(deployOut, contract);
+        NetworkClientOld networkClientOld = networkProvider.getNetworkClient(deployContractDTO.getPassword());
+        org.web3j.tx.Contract deployOut = networkClientOld.deployContract(clazz);
+
+        ContractDeployDTO deployDTO = this.saveDeployInDB(deployOut, contractName, version);
         return new AbstractMap.SimpleEntry<>(deployDTO, deployOut);
     }
 
 
-    private Map.Entry<ContractDeployDTO, ProductRegistry> deployProductRegistry(String version, DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, ContractNotFoundException, NetworkNotFoundException, NetworkContractNotRegistered, AccountNotRegisteredInCompanyNetworkException, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
-        Contract contract = contractService.getContract("ProductRegistry", version);
-        ProductRegistry deployOut = this.deploy(deployContractDTO.getPassword(), ProductRegistry.class, contract, deployContractDTO.getGasLimitPerContract());
-        ContractDeployDTO deployDTO = this.saveDeployInDB(deployOut, contract);
-        return new AbstractMap.SimpleEntry<>(deployDTO, deployOut);
-    }
-
-    private Map.Entry<ContractDeployDTO, ProductMovement> deployProductMovement(String version, DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, ContractNotFoundException, NetworkNotFoundException, NetworkContractNotRegistered, AccountNotRegisteredInCompanyNetworkException, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
-        Contract contract = contractService.getContract("ProductMovement", version);
-        ProductMovement deployOut = this.deploy(deployContractDTO.getPassword(), ProductMovement.class, contract, deployContractDTO.getGasLimitPerContract());
-        ContractDeployDTO deployDTO = this.saveDeployInDB(deployOut, contract);
-        return new AbstractMap.SimpleEntry<>(deployDTO, deployOut);
-    }
-
-    private Map.Entry<ContractDeployDTO, InventoryManagement> deployInventoryManagement(String version, DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, ContractNotFoundException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
-        Contract contract = contractService.getContract("InventoryManagement", version);
-        InventoryManagement deployOut = this.deploy(deployContractDTO.getPassword(), InventoryManagement.class, contract, deployContractDTO.getGasLimitPerContract());
-        ContractDeployDTO deployDTO = this.saveDeployInDB(deployOut, contract);
-        return new AbstractMap.SimpleEntry<>(deployDTO, deployOut);
-    }
-
-
-    private <T extends org.web3j.tx.Contract> ContractDeployDTO saveDeployInDB(T deployOut, Contract contract) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException {
+    private <T extends org.web3j.tx.Contract> ContractDeployDTO saveDeployInDB(T deployOut, String contractName, String version) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, ContractNotFoundException {
+        Contract contract = contractService.getContract(contractName, version);
         CompanyNetwork companyNetwork = networkService.getCompanyNetworkLoggedIn();
         String contractAddress = deployOut.getContractAddress();
 
@@ -106,12 +104,6 @@ public class SupplyChainService {
         return new ContractDeployDTO(
                 companyNetworkContractDAO.save(companyNetworkContract)
         );
-    }
-
-
-    private <T extends org.web3j.tx.Contract> T deploy(String password, Class<T> clazz, Contract contract, BigInteger gasLimit) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, ContractInstantiationFailed, TransactionException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
-        NetworkClient networkClient = etherService.getNetworkClient(password);
-        return networkClient.deployContract(clazz);
     }
 
 }

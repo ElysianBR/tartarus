@@ -29,4 +29,7 @@ public class Contract {
     @Column(name = "className", unique = true)
     private String className;
 
+    @Column(name = "bin")
+    private String bin;
+
 }

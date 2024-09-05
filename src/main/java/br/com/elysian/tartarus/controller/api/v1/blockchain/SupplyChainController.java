@@ -6,8 +6,9 @@ import br.com.elysian.tartarus.dto.v1.blockchain.ContractDeployDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.DeployContractDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
+import br.com.elysian.tartarus.model.Contract;
 import br.com.elysian.tartarus.service.blockchain.ContractService;
-import br.com.elysian.tartarus.service.blockchain.ethereum.EtherService;
+import br.com.elysian.tartarus.service.blockchain.NetworkService;
 import br.com.elysian.tartarus.service.blockchain.ethereum.SupplyChainService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -15,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.tx.gas.DefaultGasProvider;
 
 
 import javax.crypto.BadPaddingException;
@@ -34,13 +36,13 @@ import java.util.concurrent.ExecutionException;
 public class SupplyChainController {
 
 
-    private final EtherService etherService;
+    private final NetworkService networkService;
     private final ContractService contractService;
     private final SupplyChainService supplyChainService;
 
 
-    public SupplyChainController(EtherService etherService, ContractService contractService, SupplyChainService supplyChainService) {
-        this.etherService = etherService;
+    public SupplyChainController(NetworkService networkService, ContractService contractService, SupplyChainService supplyChainService) {
+        this.networkService = networkService;
         this.contractService = contractService;
         this.supplyChainService = supplyChainService;
     }
@@ -50,7 +52,7 @@ public class SupplyChainController {
     @Deprecated
     @PostMapping("/deployAll")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public CompletableFuture<ResponseEntity<ArrayList<ContractDeployDTO>>> deployAll(@RequestBody DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkContractNotRegistered, ContractInstantiationFailed, TransactionException, ContractNotFoundException, NetworkNotFoundException, PrivateKeyNotSet, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
+    public CompletableFuture<ResponseEntity<ArrayList<ContractDeployDTO>>> deployAll(@RequestBody DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkContractNotRegistered, ContractLoadFailed, TransactionException, ContractNotFoundException, NetworkNotFoundException, PrivateKeyNotSet, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
         // TODO: Implements security validation for user persist de private key encrypted with password and send only password for validation in DB.
 
         return CompletableFuture.completedFuture(ResponseEntity.ok(
@@ -60,14 +62,16 @@ public class SupplyChainController {
     }
 
 
+    @Deprecated
     @PostMapping("/register-consumers-access")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<TransactionReceipt> registerConsumersAccess(@RequestParam("consumerAddress") String consumerAddress, @RequestParam("access") String access) throws Exception {
         //TODO: Refactor @RequestParam to @RequestBody.
 
         CompanyNetworkContract companyNetworkContract = contractService.getNetworkContract("SupplyChainBase", "v1");
-        SupplyChainBase supplyChainBase = etherService.getNetworkClient().getContractInstance(companyNetworkContract);
-
+        Contract contract = companyNetworkContract.getContract();
+//        SupplyChainBase supplyChainBase = networkService.getNetworkClient().loadContract(contract, new DefaultGasProvider());
+        SupplyChainBase supplyChainBase = (SupplyChainBase) new Object();
         TransactionReceipt response = supplyChainBase.registerConsumersAccess(consumerAddress, access).send();
 
         // TODO: Not response complete response from blockchain, is necessary treatment
