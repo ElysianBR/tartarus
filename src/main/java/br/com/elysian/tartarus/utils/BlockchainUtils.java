@@ -2,6 +2,7 @@ package br.com.elysian.tartarus.utils;
 
 import org.web3j.crypto.Keys;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthGasPrice;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.StaticGasProvider;
@@ -36,7 +37,7 @@ public class BlockchainUtils {
     }
 
 
-    public static BigInteger getEstimatedGasPrice(Web3j web3j) throws IOException {
+    public static BigInteger getEstimatedGasPrice(Web3j web3j, Transaction transaction) throws IOException {
         return web3j.ethEstimateGas(transaction).send().getAmountUsed();
     }
 

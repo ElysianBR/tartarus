@@ -8,14 +8,15 @@ import br.com.elysian.tartarus.dto.v1.blockchain.SavePrivateKeyDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.*;
 import br.com.elysian.tartarus.model.pk.CompanyNetworkAccountPK;
+import br.com.elysian.tartarus.model.pk.CompanyNetworkContractPK;
 import br.com.elysian.tartarus.model.pk.CompanyNetworkPK;
+import br.com.elysian.tartarus.model.pk.ContractPK;
 import br.com.elysian.tartarus.repository.*;
 import br.com.elysian.tartarus.service.AccountService;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.CompanyService;
 import br.com.elysian.tartarus.service.MessageService;
 import br.com.elysian.tartarus.utils.BlockchainUtils;
-import br.com.elysian.tartarus.utils.InfuraUtils;
 import br.com.elysian.tartarus.utils.PasswordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,64 +47,32 @@ public class NetworkService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkService.class);
 
-    private final AuthService authService;
+
     private final AccountService accountService;
+    private final AuthService authService;
     private final CompanyService companyService;
-    private final NetworkDAO networkDAO;
-    private final CompanyNetworkDAO companyNetworkDAO;
     private final MessageService messageService;
-    final AccountCompanyNetworkDAO accountCompanyNetworkDAO;
+
+
+    private final AccountCompanyNetworkDAO accountCompanyNetworkDAO;
+    private final CompanyNetworkDAO companyNetworkDAO;
+    private final NetworkDAO networkDAO;
 
 
     @Autowired
-    public NetworkService(AuthService authService, AccountService accountService, CompanyService companyService, NetworkDAO networkDAO,
-                          CompanyNetworkDAO companyNetworkDAO, MessageService messageService, AccountCompanyNetworkDAO accountCompanyNetworkDAO) {
-        this.authService = authService;
+    public NetworkService(AccountService accountService, AuthService authService, CompanyService companyService, MessageService messageService,
+                          AccountCompanyNetworkDAO accountCompanyNetworkDAO, CompanyNetworkDAO companyNetworkDAO, NetworkDAO networkDAO) {
+
         this.accountService = accountService;
+        this.authService = authService;
         this.companyService = companyService;
-        this.networkDAO = networkDAO;
-        this.companyNetworkDAO = companyNetworkDAO;
         this.messageService = messageService;
+
         this.accountCompanyNetworkDAO = accountCompanyNetworkDAO;
+        this.companyNetworkDAO = companyNetworkDAO;
+        this.networkDAO = networkDAO;
+
     }
-
-
-    private NetworkClient getNetworkClient(Credentials credentials, AccountCompanyNetwork accountCompanyNetwork) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        String url = accountCompanyNetwork.getCompanyNetwork().getNetwork().getNetworkUrl();
-        Web3j web3j = Web3j.build(new HttpService(url));
-
-        String clientAddress = accountCompanyNetwork.getAddress();
-        TransactionManager transactionManager;
-
-        if (credentials == null) {
-            transactionManager = new ClientTransactionManager(web3j, clientAddress);
-        } else {
-            long chainId = web3j.ethChainId().send().getChainId().longValue();
-            transactionManager = new RawTransactionManager(web3j, credentials, chainId);
-        }
-
-        return new NetworkClient(credentials, web3j, transactionManager, messageService);
-    }
-
-
-    public NetworkClient getNetworkClient(String password, AccountCompanyNetwork accountCompanyNetwork) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkNotFoundException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
-        String privateKey = this.getPrivateKey(password);
-        Credentials credentials = Credentials.create(privateKey);
-        return this.getNetworkClient(credentials, accountCompanyNetwork);
-    }
-
-    public NetworkClient getNetworkClient(AccountCompanyNetwork accountCompanyNetwork) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        return this.getNetworkClient((Credentials) null, accountCompanyNetwork);
-    }
-
-    public NetworkClient getNetworkClient(String password) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, InvalidUsernameOrPasswordException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, PrivateKeyNotSet, IOException, KeyStoreException, KeyManagementException {
-        return this.getNetworkClient(password, this.getAccountCompanyNetworkLoggedIn());
-    }
-
-    public NetworkClient getNetworkClient() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        return this.getNetworkClient(this.getAccountCompanyNetworkLoggedIn());
-    }
-
 
 
     public void with(String networkTag) throws NetworkNotFoundException {
@@ -124,7 +93,6 @@ public class NetworkService {
             return network.get();
         }
 
-        System.out.println("Entrei aq");
         throw new NetworkNotFoundException(String.format(messageService.getMessage("tartarus.blockchain.network.not-found"), networkTag));
     }
 
@@ -249,6 +217,5 @@ public class NetworkService {
 
         return networks;
     }
-
 
 }

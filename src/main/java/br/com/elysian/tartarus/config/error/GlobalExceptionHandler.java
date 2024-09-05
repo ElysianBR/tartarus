@@ -2,6 +2,8 @@ package br.com.elysian.tartarus.config.error;
 
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.service.MessageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    
     private final MessageService messageService;
 
     @Autowired
@@ -26,15 +30,19 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler({NoResourceFoundException.class, BlockchainNotFoundException.class, CompanyNotFoundException.class})
-    public ResponseEntity<ErrorResponse> handleNotFound(Exception ex) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND, ex);
+    public ResponseEntity<ErrorResponse> handleNotFound(Exception e) {
+        LOGGER.error(e.getMessage(), e);
+        
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND, e);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleArgumentNotValid(MethodArgumentNotValidException ex) {
-        FieldError fieldError = ex.getBindingResult().getFieldError();
+    public ResponseEntity<ErrorResponse> handleArgumentNotValid(MethodArgumentNotValidException e) {
+        LOGGER.error(e.getMessage(), e);
+        
+        FieldError fieldError = e.getBindingResult().getFieldError();
         String message;
 
         if (fieldError != null) {
@@ -49,29 +57,37 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(EmailAlreadyRegisteredException.class)
-    public ResponseEntity<ErrorResponse> handleEmailAlreadyRegistered(EmailAlreadyRegisteredException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.CONFLICT, ex);
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyRegistered(EmailAlreadyRegisteredException e) {
+        LOGGER.error(e.getMessage(), e);
+        
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.CONFLICT, e);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
 
     @ExceptionHandler({InvalidUsernameOrPasswordException.class, MismatchedPasswordsException.class, BadCredentialsException.class, NetworkNotLoggedInException.class, CompanyNotLoggedInException.class})
-    public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED, ex);
+    public ResponseEntity<ErrorResponse> handleUnauthorized(Exception e) {
+        LOGGER.error(e.getMessage(), e);
+        
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED, e);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
 
     @ExceptionHandler({ReCaptchaException.class, AccessDeniedException.class})
-    public ResponseEntity<ErrorResponse> handleForbidden(Exception ex) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleForbidden(Exception e) {
+        LOGGER.error(e.getMessage(), e);
+        
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN, e.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
 
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception ex) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex);
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        LOGGER.error(e.getMessage(), e);
+        
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }

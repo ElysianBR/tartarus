@@ -7,6 +7,8 @@ import br.com.elysian.tartarus.dto.v1.blockchain.DeployContractDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.model.Contract;
+import br.com.elysian.tartarus.service.blockchain.AbstractContract;
+import br.com.elysian.tartarus.service.blockchain.ContractClient;
 import br.com.elysian.tartarus.service.blockchain.ContractService;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
 import br.com.elysian.tartarus.service.blockchain.ethereum.SupplyChainService;
@@ -48,30 +50,19 @@ public class SupplyChainController {
     }
 
 
-    @Async
-    @Deprecated
-    @PostMapping("/deployAll")
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public CompletableFuture<ResponseEntity<ArrayList<ContractDeployDTO>>> deployAll(@RequestBody DeployContractDTO deployContractDTO) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkContractNotRegistered, ContractLoadFailed, TransactionException, ContractNotFoundException, NetworkNotFoundException, PrivateKeyNotSet, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
-        // TODO: Implements security validation for user persist de private key encrypted with password and send only password for validation in DB.
-
-        return CompletableFuture.completedFuture(ResponseEntity.ok(
-                new ArrayList<>(
-                        supplyChainService.deployAll("v1", deployContractDTO).keySet()
-                )));
-    }
-
-
-    @Deprecated
     @PostMapping("/register-consumers-access")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<TransactionReceipt> registerConsumersAccess(@RequestParam("consumerAddress") String consumerAddress, @RequestParam("access") String access) throws Exception {
         //TODO: Refactor @RequestParam to @RequestBody.
 
-        CompanyNetworkContract companyNetworkContract = contractService.getNetworkContract("SupplyChainBase", "v1");
-        Contract contract = companyNetworkContract.getContract();
-//        SupplyChainBase supplyChainBase = networkService.getNetworkClient().loadContract(contract, new DefaultGasProvider());
+        ContractClient client = contractService.getContractClient();
+        Contract contract = contractService.getContract("SupplyChainBase", "v1");
+        AbstractContract abstractContract = client.loadContract(contract);
+
+//        abstractContract
+
         SupplyChainBase supplyChainBase = (SupplyChainBase) new Object();
+
         TransactionReceipt response = supplyChainBase.registerConsumersAccess(consumerAddress, access).send();
 
         // TODO: Not response complete response from blockchain, is necessary treatment
