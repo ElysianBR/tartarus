@@ -46,19 +46,14 @@ public class AbstractContract extends Contract {
         super(ensResolver, contractBinary, contractAddress, web3j, transactionManager, gasProvider);
     }
 
-    public <T extends Contract> RemoteCall<T> deploy(Class<T> clazz) {
-        return deployRemoteCall(clazz, super.web3j, super.transactionManager, super.gasProvider, super.contractBinary, "");
+
+    public static AbstractContract fromContract(Contract contract, Web3j web3j, TransactionManager transactionManager, ContractGasProvider gasProvider) {
+        return new AbstractContract(contract.getContractBinary(), contract.getContractAddress(), web3j, transactionManager, gasProvider);
     }
 
-    public <T extends Contract> RemoteCall<T> deploy(Class<T> clazz, BigInteger gasWaiValue) {
-        return deployRemoteCall(clazz, super.web3j, super.transactionManager, super.gasProvider, super.contractBinary, "", gasWaiValue);
+    public static AbstractContract fromContract(Contract contract, Web3j web3j, Credentials credentials, ContractGasProvider gasProvider) {
+        return new AbstractContract(contract.getContractBinary(), contract.getContractAddress(), web3j, credentials, gasProvider);
     }
 
-    public RemoteCall<AbstractContract> deploy() {
-        return deployRemoteCall(AbstractContract.class, super.web3j, super.transactionManager, super.gasProvider, super.contractBinary, "");
-    }
-    public RemoteCall<AbstractContract> deploy(BigInteger gasWaiValue) {
-        return deployRemoteCall(AbstractContract.class, super.web3j, super.transactionManager, super.gasProvider, super.contractBinary, "", gasWaiValue);
-    }
 
 }

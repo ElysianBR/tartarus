@@ -12,26 +12,20 @@ import br.com.elysian.tartarus.service.blockchain.ContractClient;
 import br.com.elysian.tartarus.service.blockchain.ContractService;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
 import br.com.elysian.tartarus.service.blockchain.ethereum.SupplyChainService;
+import br.com.elysian.tartarus.utils.BlockchainUtils;
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.async.DeferredResult;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.protocol.exceptions.TransactionException;
-import org.web3j.tx.gas.DefaultGasProvider;
 
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 
 @RestController
 @RequestMapping("/api/v1/blockchain/supply-chain")
@@ -49,6 +43,46 @@ public class SupplyChainController {
         this.supplyChainService = supplyChainService;
     }
 
+    @Deprecated
+    @PostMapping("/deploySupplyChainBase")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public CompletableFuture<ResponseEntity<ContractDeployDTO>> deploySupplyChainBase(@RequestBody DeployContractDTO deployContractDTO, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        ContractClient client = contractService.getContractClient(deployContractDTO.getPassword());
+        Contract contract = contractService.getContract("SupplyChainBase", "v1");
+
+        CompletableFuture<AbstractContract> abstractContract = client.deploy(contract);
+
+        return CompletableFuture.completedFuture(
+                ResponseEntity.ok(
+                        supplyChainService.saveDeployInDB(
+                                abstractContract.get(), "SupplyChainBase", "v1"
+                        )
+                )
+        );
+    }
+
+    @PostMapping("/testSession")
+    public void testSession(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            // Simula um longo processamento
+            for (int i = 0; i < 10; i++) {
+                Thread.sleep(1000); // Espera 1 segundo
+                try {
+                    if (response.isCommitted()) {
+                        // O cliente se desconectou
+                        System.out.println("Cliente desconectou antes do processamento ser concluído.");
+                        break;
+                    }
+                } catch (IllegalStateException e) {
+                    System.out.println("IllegalStateException - Cliente desconectou antes do processamento ser concluído.");
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     @PostMapping("/register-consumers-access")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
@@ -56,10 +90,8 @@ public class SupplyChainController {
         //TODO: Refactor @RequestParam to @RequestBody.
 
         ContractClient client = contractService.getContractClient();
-        Contract contract = contractService.getContract("SupplyChainBase", "v1");
+        CompanyNetworkContract contract = contractService.getNetworkContract("SupplyChainBase", "v1");
         AbstractContract abstractContract = client.loadContract(contract);
-
-//        abstractContract
 
         SupplyChainBase supplyChainBase = (SupplyChainBase) new Object();
 

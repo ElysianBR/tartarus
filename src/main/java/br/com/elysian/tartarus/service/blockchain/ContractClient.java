@@ -1,22 +1,21 @@
 package br.com.elysian.tartarus.service.blockchain;
 
 import br.com.elysian.tartarus.exception.ContractLoadFailed;
+import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.service.MessageService;
 import br.com.elysian.tartarus.utils.BlockchainUtils;
+import br.com.elysian.tartarus.utils.InfuraUtils;
 import lombok.Getter;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameter;
-import org.web3j.protocol.core.RemoteCall;
-import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.tx.gas.StaticGasProvider;
 
-import java.io.IOException;
 import java.math.BigInteger;
+import java.util.concurrent.CompletableFuture;
 
 public class ContractClient {
 
@@ -36,23 +35,13 @@ public class ContractClient {
         this.messageService = messageService;
     }
 
-    public ContractGasProvider getActualGasProvider() throws IOException {
-        BigInteger gasPrice = BlockchainUtils.getGasPrice(web3j);
-        return new StaticGasProvider(gasPrice, DefaultGasProvider.GAS_LIMIT);
-    }
 
-    public ContractGasProvider getActualGasProvider(BigInteger gasLimit) throws IOException {
-        BigInteger gasPrice = BlockchainUtils.getGasPrice(web3j);
-        return new StaticGasProvider(gasPrice, gasLimit);
-    }
-
-
-    private AbstractContract loadContract(br.com.elysian.tartarus.model.Contract contract, ContractGasProvider gasProvider) throws ContractLoadFailed {
+    private AbstractContract loadContract(CompanyNetworkContract contract, ContractGasProvider gasProvider) throws ContractLoadFailed {
         try {
-            String clientAddress = transactionManager.getFromAddress();
-            String binary = contract.getBin();
+            String contractAddress = contract.getContractAddress();
+            String binary = contract.getContract().getBin();
 
-            return new AbstractContract(binary, clientAddress, web3j, transactionManager, gasProvider);
+            return new AbstractContract(binary, contractAddress, web3j, transactionManager, gasProvider);
 
         } catch (Exception e) {
 
@@ -61,34 +50,28 @@ public class ContractClient {
         }
     }
 
-    public AbstractContract loadContract(br.com.elysian.tartarus.model.Contract contract) throws ContractLoadFailed, IOException {
-        return this.loadContract(contract, getActualGasProvider());
+    public AbstractContract loadContract(CompanyNetworkContract contract) throws ContractLoadFailed {
+        return this.loadContract(contract, new DefaultGasProvider());
     }
 
-    public <T extends Contract> T deploy(br.com.elysian.tartarus.model.Contract contract, Class<T> clazz) throws Exception {
-
-        // Prepare uma transação para o deploy
+    public <T extends Contract> CompletableFuture<T> deploy(br.com.elysian.tartarus.model.Contract contract, Class<T> clazz) throws Exception {
         String binary = contract.getBin();
         String fromAddress = credentials.getAddress();
-        BigInteger nonce = web3j.ethGetTransactionCount(fromAddress, DefaultBlockParameter.valueOf("latest")).send().getTransactionCount();
+
         BigInteger gasPrice = BlockchainUtils.getGasPrice(web3j);
-        BigInteger value = BigInteger.ZERO; // Normalmente, zero para deploy
-        BigInteger gasLimit = DefaultGasProvider.GAS_LIMIT;
+        BigInteger estimateGas = BlockchainUtils.getEstimatedGasPriceToDeploy(web3j, gasPrice, fromAddress, binary);
 
-        // Crie a transação para estimar o gás necessário para o deploy
-        Transaction transaction = Transaction.createContractTransaction(
-                fromAddress, nonce, gasPrice, gasLimit, value, binary);
+        System.out.println("gasPrice: " + gasPrice);
+        System.out.println("estimateGas: " + estimateGas);
 
-        BigInteger estimateGas = BlockchainUtils.getEstimatedGasPrice(web3j, transaction);
+        StaticGasProvider gasProvider = new StaticGasProvider(gasPrice, estimateGas);
 
-        StaticGasProvider gasProvider = new StaticGasProvider(gasPrice, estimateGas.multiply(new BigInteger("3")));
-
-        AbstractContract abstractContract = this.loadContract(contract, gasProvider);
-
-        return abstractContract.deploy(clazz, estimateGas).send();
+        return Contract.deployRemoteCall(
+                clazz, web3j, transactionManager, gasProvider, binary, ""
+        ).sendAsync();
     }
 
-    public AbstractContract deploy(br.com.elysian.tartarus.model.Contract contract) throws Exception {
+    public CompletableFuture<AbstractContract> deploy(br.com.elysian.tartarus.model.Contract contract) throws Exception {
         return this.deploy(contract, AbstractContract.class);
     }
 

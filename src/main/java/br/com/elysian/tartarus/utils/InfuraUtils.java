@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 
+@Deprecated
 public class InfuraUtils {
 
     @Getter
@@ -128,7 +129,9 @@ public class InfuraUtils {
 
 }
 
+
 @Getter
+@Deprecated
 @NoArgsConstructor
 class InfuraBody {
 

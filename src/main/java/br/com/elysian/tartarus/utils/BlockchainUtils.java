@@ -1,5 +1,6 @@
 package br.com.elysian.tartarus.utils;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.web3j.crypto.Keys;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.request.Transaction;
@@ -21,6 +22,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.concurrent.*;
 
 
 public class BlockchainUtils {
@@ -37,8 +39,18 @@ public class BlockchainUtils {
     }
 
 
-    public static BigInteger getEstimatedGasPrice(Web3j web3j, Transaction transaction) throws IOException {
-        return web3j.ethEstimateGas(transaction).send().getAmountUsed();
+    public static BigInteger getEstimatedGasPriceToDeploy(Web3j web3j, BigInteger gasPrice, String from, String bytecode) throws IOException {
+        return web3j.ethEstimateGas(Transaction.createContractTransaction(
+                from,
+                null,
+                gasPrice,
+                bytecode
+        )).send().getAmountUsed();
+    }
+
+
+    public static BigInteger getEstimatedGasPriceToDeploy(Web3j web3j, String from, String bytecode) throws IOException {
+        return getEstimatedGasPriceToDeploy(web3j, getGasPrice(web3j), from, bytecode);
     }
 
 
@@ -79,5 +91,25 @@ public class BlockchainUtils {
         return new String(decrypted, StandardCharsets.UTF_8);
     }
 
+//    public static <T> T executeExternalCall(HttpServletRequest request, Callable<T> call) {
+//        try (ExecutorService executor = Executors.newSingleThreadExecutor()) {
+//
+//            Future<T> future = executor.submit(call);
+//
+//            request.startAsync();
+//
+//            while (!future.isDone()) {
+//                System.out.println("ENTREI AQ");
+//                if (request.isAsyncStarted() && request.getSession(false) == null) {
+//                    future.cancel(true);
+//                    throw new InterruptedException("Sessão encerrada. A chamada externa foi cancelada.");
+//                }
+//            }
+//
+//            return future.get();
+//        } catch (ExecutionException | InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
 }

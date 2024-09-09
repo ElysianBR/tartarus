@@ -60,6 +60,21 @@ public class ContractService {
         throw new ContractNotFoundException(String.format(messageService.getMessage("tartarus.blockchain.contract.not-found"), contractName, version));
     }
 
+    public CompanyNetworkContract getNetworkContract(String contractName, String version) throws ContractNotFoundException, NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, NetworkContractNotRegistered {
+        Contract contract = this.getContract(contractName, version);
+
+        CompanyNetwork companyNetwork = networkService.getCompanyNetworkLoggedIn();
+
+        CompanyNetworkContractPK companyNetworkContractPK = new CompanyNetworkContractPK(companyNetwork, contract);
+
+        Optional<CompanyNetworkContract> companyNetworkContract = networkContractDAO.findById(companyNetworkContractPK);
+        if (companyNetworkContract.isPresent()) {
+            return companyNetworkContract.get();
+        }
+
+
+        throw new NetworkContractNotRegistered(String.format(messageService.getMessage("tartarus.blockchain.contract.not-registered-in-company"), contractName, version, companyNetwork.getNetwork().getNetworkNameFormated()));
+    }
 
     private ContractClient getContractClient(Credentials credentials, AccountCompanyNetwork accountCompanyNetwork) throws IOException {
         String url = accountCompanyNetwork.getCompanyNetwork().getNetwork().getNetworkUrl();
