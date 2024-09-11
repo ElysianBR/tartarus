@@ -19,6 +19,7 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -36,6 +37,8 @@ import java.util.Optional;
 public class AuthService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
+
+    private final AuthenticationManager authenticationManager;
     private final MessageService messageService;
     private final AccountDAO accountDAO;
     private final JwtService jwtService;
@@ -50,7 +53,8 @@ public class AuthService {
 
 
     @Autowired
-    private AuthService(MessageService messageService, AccountDAO accountDAO, JwtService jwtUtil) {
+    private AuthService(AuthenticationManager authenticationManager, MessageService messageService, AccountDAO accountDAO, JwtService jwtUtil) {
+        this.authenticationManager = authenticationManager;
         this.messageService = messageService;
         this.accountDAO = accountDAO;
         this.jwtService = jwtUtil;
@@ -62,6 +66,9 @@ public class AuthService {
 
     public void setCurrentAuthentication(Authentication authentication) {
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        authenticationManager.authenticate(
+                authentication
+        );
     }
 
     public AuthenticationAccount getAuthentication(String jwtToken) {

@@ -6,20 +6,15 @@ spring:
         driver-class-name: org.postgresql.Driver
 
     jpa:
-        database-platform: org.hibernate.dialect.PostgreSQLDialect
         generate-ddl: true
+        open-in-view: false
         properties:
             hibernate:
                 default_schema: tartarus
-                dialect: org.hibernate.dialect.PostgreSQLDialect
+
 
     messages:
         basename: messages/messages
-
-
-#    mvc:
-#        async:
-#            request-timeout: -1
 
 
     sql:
@@ -57,11 +52,6 @@ server:
             charset: UTF-8
             enabled: true
             force: true
-#        session:
-#            timeout: 120s
-#    tomcat:
-#        connection-timeout: 120s
-#        keep-alive-timeout: 180s
 
 
 springdoc:

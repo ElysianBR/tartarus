@@ -38,6 +38,10 @@ public class BlockchainUtils {
         return web3j.ethGasPrice().send().getGasPrice();
     }
 
+    public static BigInteger getBaseFee(Web3j web3j) throws IOException {
+        return web3j.ethBaseFee().send().getBaseFee();
+    }
+
 
     public static BigInteger getEstimatedGasPriceToDeploy(Web3j web3j, BigInteger gasPrice, String from, String bytecode) throws IOException {
         return web3j.ethEstimateGas(Transaction.createContractTransaction(
@@ -46,25 +50,6 @@ public class BlockchainUtils {
                 gasPrice,
                 bytecode
         )).send().getAmountUsed();
-    }
-
-
-    public static BigInteger getEstimatedGasPriceToDeploy(Web3j web3j, String from, String bytecode) throws IOException {
-        return getEstimatedGasPriceToDeploy(web3j, getGasPrice(web3j), from, bytecode);
-    }
-
-
-    public static ContractGasProvider getGasProvider(Web3j web3j, BigDecimal maxGasPercentUnderGasPrice) throws IOException {
-        BigInteger gasPrice = BlockchainUtils.getGasPrice(web3j);
-        BigDecimal maxPercentDecimal = maxGasPercentUnderGasPrice.divide(HUNDRED, RoundingMode.HALF_UP);
-        BigDecimal percent = BigDecimal.ONE.add(maxPercentDecimal);
-        BigDecimal maxGasPrice = new BigDecimal(gasPrice).multiply(percent);
-        return new StaticGasProvider(gasPrice, maxGasPrice.toBigInteger());
-    }
-
-    public static ContractGasProvider getGasProvider(Web3j web3j) throws IOException {
-        BigInteger gasPrice = BlockchainUtils.getGasPrice(web3j);
-        return new StaticGasProvider(gasPrice, gasPrice);
     }
 
 

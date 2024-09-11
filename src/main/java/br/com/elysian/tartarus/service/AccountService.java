@@ -42,13 +42,13 @@ public class AccountService {
         this.confirmationTypeDAO = confirmationTypeDAO;
     }
 
-    public Account saveUser(RegistrationDTO registrationDTO) throws EmailAlreadyRegisteredException {
-        if (accountDAO.existsByEmail(registrationDTO.getEmail())) {
-            throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email-already-registered"), registrationDTO.getEmail()));
+    public Account saveUser(CreateAccountDTO createAccountDTO) throws EmailAlreadyRegisteredException {
+        if (accountDAO.existsByEmail(createAccountDTO.getEmail())) {
+            throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email-already-registered"), createAccountDTO.getEmail()));
         }
 
 
-        Account account = accountDAO.save(new Account(registrationDTO));
+        Account account = accountDAO.save(new Account(createAccountDTO));
         ConfirmationType confirmationType = confirmationTypeDAO.findById(1).get();
         Confirmation confirmationMail = new Confirmation(account, confirmationType);
         confirmationDAO.save(confirmationMail);

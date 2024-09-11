@@ -47,13 +47,13 @@ public class AccountController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<TokenDTO> createAccount(@Valid @RequestBody RegistrationDTO registrationDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException, InvalidUsernameOrPasswordException {
+    public ResponseEntity<TokenDTO> create(@Valid @RequestBody CreateAccountDTO createAccountDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException, InvalidUsernameOrPasswordException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);
         }
 
-        Account account = accountService.saveUser(registrationDTO);
+        Account account = accountService.saveUser(createAccountDTO);
         TokenDTO token = authService.getAuthorization(account);
         authService.setHeaders(token, response);
 

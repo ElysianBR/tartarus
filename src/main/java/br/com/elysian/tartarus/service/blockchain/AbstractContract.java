@@ -1,24 +1,21 @@
 package br.com.elysian.tartarus.service.blockchain;
 
-import br.com.elysian.tartarus.blockchain.contracts.ethereum.v1.InventoryManagement;
+import br.com.elysian.tartarus.dto.v1.blockchain.ParameterDTO;
+import br.com.elysian.tartarus.utils.ParameterUtils;
+import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.crypto.Credentials;
 import org.web3j.ens.EnsResolver;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.RemoteCall;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.protocol.exceptions.JsonRpcError;
-import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
-import org.web3j.tx.gas.ContractEIP1559GasProvider;
 import org.web3j.tx.gas.ContractGasProvider;
-import org.web3j.tx.response.EmptyTransactionReceipt;
-import org.web3j.utils.RevertReasonExtractor;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.math.BigInteger;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 
 public class AbstractContract extends Contract {
 
@@ -55,5 +52,11 @@ public class AbstractContract extends Contract {
         return new AbstractContract(contract.getContractBinary(), contract.getContractAddress(), web3j, credentials, gasProvider);
     }
 
+//    public RemoteFunctionCall<T> executeFunc(String name, ParameterDTO[] inParams, ParameterDTO[] outParams) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+//        final Function function = new Function(name,
+//                ParameterUtils.castAndList(inParams),
+//                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
+//        return executeRemoteCallSingleValueReturn(function, String.class);
+//    }
 
 }

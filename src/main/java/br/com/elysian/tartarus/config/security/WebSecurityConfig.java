@@ -7,7 +7,10 @@ import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,7 +32,7 @@ public class WebSecurityConfig {
     @Getter
     private static final String[] NO_AUTH_PATHS = new String[]{
             "/swagger/**", "/swagger-ui/**", "/api-docs/**",
-            "/error", "/api/v1/auth/**", "/api/v1/account/create"
+            "/api/v1/auth/**", "/api/v1/account/create"
     };
 
     @Autowired
@@ -37,22 +40,48 @@ public class WebSecurityConfig {
         this.authService = authService;
     }
 
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer() {
+//        return (web) -> web.ignoring().requestMatchers(
+//                WebSecurityConfig.NO_AUTH_PATHS
+//        );
+//    }
+
+
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers(
-                WebSecurityConfig.NO_AUTH_PATHS
-        );
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+
+    private HttpSecurity setDefaultPropsHttpSecurity(HttpSecurity http) throws Exception {
+        return http.csrf(AbstractHttpConfigurer::disable)
+                .headers(httpSecurityHeadersConfigurer ->
+                        httpSecurityHeadersConfigurer
+                                .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .sessionManagement(sessionManagement ->
+                        sessionManagement
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .headers(httpSecurityHeadersConfigurer -> httpSecurityHeadersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry.anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults())
-                .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new AuthenticationFilter(authService), UsernamePasswordAuthenticationFilter.class);
+    @Order(1)
+    public SecurityFilterChain noAuthFilter(HttpSecurity http) throws Exception {
+        setDefaultPropsHttpSecurity(http)
+                .authorizeHttpRequests(authorize ->
+                        authorize
+                                .requestMatchers(NO_AUTH_PATHS).permitAll());
         return http.build();
+    }
+
+    @Bean
+    public SecurityFilterChain authFilter(HttpSecurity http) throws Exception {
+        return setDefaultPropsHttpSecurity(http)
+                .authorizeHttpRequests(authorize ->
+                        authorize
+                                .anyRequest().authenticated())
+                .addFilterBefore(new AuthenticationFilter(authService), UsernamePasswordAuthenticationFilter.class)
+        .build();
     }
 
     @PostConstruct

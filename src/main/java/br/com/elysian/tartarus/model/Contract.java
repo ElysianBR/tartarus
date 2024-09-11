@@ -32,4 +32,7 @@ public class Contract {
     @Column(name = "bin")
     private String bin;
 
+    @Column(name = "aba")
+    private String aba;
+
 }

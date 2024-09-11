@@ -1,12 +1,10 @@
-package br.com.elysian.tartarus.service.blockchain.ethereum;
+package br.com.elysian.tartarus.service.blockchain;
 
 
 import br.com.elysian.tartarus.dto.v1.blockchain.ContractDeployDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.*;
 import br.com.elysian.tartarus.repository.CompanyNetworkContractDAO;
-import br.com.elysian.tartarus.service.blockchain.ContractService;
-import br.com.elysian.tartarus.service.blockchain.NetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

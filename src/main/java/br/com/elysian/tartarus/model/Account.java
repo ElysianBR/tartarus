@@ -1,6 +1,6 @@
 package br.com.elysian.tartarus.model;
 
-import br.com.elysian.tartarus.dto.v1.RegistrationDTO;
+import br.com.elysian.tartarus.dto.v1.CreateAccountDTO;
 import br.com.elysian.tartarus.dto.v1.SaveAccountDTO;
 import br.com.elysian.tartarus.utils.PasswordUtils;
 import com.fasterxml.jackson.annotation.*;
@@ -114,11 +114,11 @@ public class Account {
     }
 
 
-    public Account(RegistrationDTO registrationDTO) {
-        this.firstName = registrationDTO.getFirstName();
-        this.lastName = registrationDTO.getLastName();
-        this.email = registrationDTO.getEmail();
-        this.password = PasswordUtils.hashPassword(registrationDTO.getPassword());
+    public Account(CreateAccountDTO createAccountDTO) {
+        this.firstName = createAccountDTO.getFirstName();
+        this.lastName = createAccountDTO.getLastName();
+        this.email = createAccountDTO.getEmail();
+        this.password = PasswordUtils.hashPassword(createAccountDTO.getPassword());
     }
 
     public void setAccountFromDTO(SaveAccountDTO accountDTO) {

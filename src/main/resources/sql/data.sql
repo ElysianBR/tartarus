@@ -103,7 +103,7 @@ SELECT true,
        1,
        'Sepolia ETH',
        'Testnet Ethereum for development',
-       'https://rpc.sepolia.org',
+       'https://rpc2.sepolia.org',
        'https://sepolia.infura.io/v3'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".network WHERE id = 1);
 
@@ -148,7 +148,7 @@ INSERT INTO "tartarus".account_company_network(account_id, company_network_block
 SELECT 1,
        1,
        1,
-       '0x612f733F3809D2868EAbC02F675AA173c23dB548',
+       '0xBB4520524293176B981f3e9Fc1bFe167b08Daa51',
        0
 WHERE NOT EXISTS (SELECT 1
                   FROM "tartarus".account_company_network

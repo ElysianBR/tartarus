@@ -6,20 +6,20 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.math.BigInteger;
-
 @Getter
 @AllArgsConstructor
-public class DeployContractDTO {
+public class ExecuteFuncDTO {
 
     @NotNull
     @NotBlank
-    private final BigInteger gasPrice;
-
-    private final BigInteger gasLimitPerContract;
-
+    private final String contactName;
     @NotNull
     @NotBlank
-    private final String password;
+    private final String version;
+    @NotNull
+    @NotBlank
+    private final String functionName;
+    private final ParameterDTO[] parameters;
 
 }
+
