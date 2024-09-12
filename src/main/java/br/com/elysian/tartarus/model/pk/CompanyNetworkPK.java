@@ -15,19 +15,4 @@ import java.util.Objects;
 public class CompanyNetworkPK implements Serializable {
     private Company company;
     private Network network;
-
-    @Override
-    public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CompanyNetworkPK that)) return false;
-
-        return Objects.equals(company, that.company) && Objects.equals(network, that.network);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Objects.hashCode(company);
-        result = 31 * result + Objects.hashCode(network);
-        return result;
-    }
 }

@@ -12,13 +12,13 @@ public class ContractDTO {
     private final String name;
     private final String version;
     private final String bin;
-    private final String aba;
+    private final String abi;
 
     public ContractDTO(Contract contract) {
         this.name = contract.getName();
         this.version = contract.getVersion();
         this.bin = contract.getBin();
-        this.aba = contract.getAba();
+        this.abi = contract.getAbi();
     }
 
 }

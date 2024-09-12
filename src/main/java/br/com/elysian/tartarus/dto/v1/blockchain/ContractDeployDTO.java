@@ -20,10 +20,10 @@ public class ContractDeployDTO {
     private String contractAddress;
 
     public ContractDeployDTO(CompanyNetworkContract companyNetworkContract) {
-        companyId = companyNetworkContract.getCompanyNetwork().getCompany().getId();
-        networkId = companyNetworkContract.getCompanyNetwork().getNetwork().getId();
-        contractName = companyNetworkContract.getContract().getName();
-        version = companyNetworkContract.getContract().getVersion();
+        companyId = companyNetworkContract.getPk().getCompanyNetwork().getCompany().getId();
+        networkId = companyNetworkContract.getPk().getCompanyNetwork().getNetwork().getId();
+        contractName = companyNetworkContract.getPk().getContract().getName();
+        version = companyNetworkContract.getPk().getContract().getVersion();
         maxGasWei = companyNetworkContract.getMaxGasWei();
         contractAddress = companyNetworkContract.getContractAddress();
     }

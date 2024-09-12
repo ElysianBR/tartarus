@@ -1,14 +1,15 @@
 package br.com.elysian.tartarus.service.blockchain;
 
 
-import br.com.elysian.tartarus.dto.v1.blockchain.ContractDTO;
+import br.com.elysian.tartarus.dto.v1.blockchain.ContractDeployDTO;
 import br.com.elysian.tartarus.exception.*;
-import br.com.elysian.tartarus.model.AccountCompanyNetwork;
+import br.com.elysian.tartarus.model.CompanyNetworkAccount;
 import br.com.elysian.tartarus.model.CompanyNetwork;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.model.Contract;
 import br.com.elysian.tartarus.model.pk.CompanyNetworkContractPK;
 import br.com.elysian.tartarus.model.pk.ContractPK;
+import br.com.elysian.tartarus.repository.CompanyNetworkContractDAO;
 import br.com.elysian.tartarus.repository.ContractDAO;
 import br.com.elysian.tartarus.repository.NetworkContractDAO;
 import br.com.elysian.tartarus.service.MessageService;
@@ -16,17 +17,14 @@ import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Credentials;
-import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.ClientTransactionManager;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.TransactionManager;
-import org.web3j.tx.response.PollingTransactionReceiptProcessor;
-import org.web3j.tx.response.TransactionReceiptProcessor;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -43,15 +41,18 @@ public class ContractService {
 
 
     private final ContractDAO contractDAO;
+    private final CompanyNetworkContractDAO companyNetworkContractDAO;
     private final NetworkContractDAO networkContractDAO;
 
 
     @Autowired
     public ContractService(MessageService messageService, NetworkService networkService,
-                           ContractDAO contractDAO, NetworkContractDAO networkContractDAO) {
+                           ContractDAO contractDAO, CompanyNetworkContractDAO companyNetworkContractDAO,
+                           NetworkContractDAO networkContractDAO) {
         this.messageService = messageService;
         this.networkService = networkService;
         this.contractDAO = contractDAO;
+        this.companyNetworkContractDAO = companyNetworkContractDAO;
         this.networkContractDAO = networkContractDAO;
     }
 
@@ -83,8 +84,8 @@ public class ContractService {
         throw new NetworkContractNotRegistered(String.format(messageService.getMessage("tartarus.blockchain.contract.not-registered-in-company"), contractName, version, companyNetwork.getNetwork().getNetworkNameFormated()));
     }
 
-    private ContractClient getContractClient(Credentials credentials, AccountCompanyNetwork accountCompanyNetwork) throws IOException {
-        String url = accountCompanyNetwork.getCompanyNetwork().getNetwork().getNetworkUrl();
+    private ContractClient getContractClient(Credentials credentials, CompanyNetworkAccount companyNetworkAccount) throws IOException {
+        String url = companyNetworkAccount.getCompanyNetwork().getNetwork().getNetworkUrl();
         OkHttpClient.Builder connBuilder = new OkHttpClient.Builder();
         connBuilder.callTimeout(5, TimeUnit.MINUTES);
         connBuilder.connectTimeout(5, TimeUnit.MINUTES);
@@ -97,7 +98,7 @@ public class ContractService {
 //        TransactionReceiptProcessor processor = new PollingTransactionReceiptProcessor(web3j, 10, 5);
 
         if (credentials == null) {
-            String clientAddress = accountCompanyNetwork.getAddress();
+            String clientAddress = companyNetworkAccount.getAddress();
             transactionManager = new ClientTransactionManager(web3j, clientAddress);
         } else {
             long chainId = web3j.ethChainId().send().getChainId().longValue();
@@ -107,25 +108,39 @@ public class ContractService {
         return new ContractClient(credentials, web3j, transactionManager, messageService);
     }
 
-    public ContractClient getContractClient(String password, AccountCompanyNetwork accountCompanyNetwork) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NetworkNotFoundException, PrivateKeyNotSet, IOException {
+    public ContractClient getContractClient(String password, CompanyNetworkAccount companyNetworkAccount) throws NetworkNotLoggedInException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NetworkNotFoundException, PrivateKeyNotSet, IOException {
         Credentials credentials = null;
         if (password != null) {
             String privateKey = networkService.getPrivateKey(password);
             credentials = Credentials.create(privateKey);
         }
-        return this.getContractClient(credentials, accountCompanyNetwork);
+        return this.getContractClient(credentials, companyNetworkAccount);
     }
 
     public ContractClient getContractClient(String password) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, InvalidUsernameOrPasswordException, PrivateKeyNotSet, IOException {
         return this.getContractClient(password, networkService.getAccountCompanyNetworkLoggedIn());
     }
 
-    public ContractClient getContractClient(AccountCompanyNetwork accountCompanyNetwork) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        return this.getContractClient((Credentials) null, accountCompanyNetwork);
+    public ContractClient getContractClient(CompanyNetworkAccount companyNetworkAccount) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return this.getContractClient((Credentials) null, companyNetworkAccount);
     }
 
     public ContractClient getContractClient() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         return this.getContractClient(networkService.getAccountCompanyNetworkLoggedIn());
+    }
+
+
+    public <T extends org.web3j.tx.Contract> CompanyNetworkContract saveDeployInDB(T deployOut, Contract contract) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, ContractNotFoundException {
+        CompanyNetwork companyNetwork = networkService.getCompanyNetworkLoggedIn();
+        String contractAddress = deployOut.getContractAddress();
+
+        CompanyNetworkContract companyNetworkContract = new CompanyNetworkContract(new CompanyNetworkContractPK(companyNetwork, contract), BigInteger.ZERO, contractAddress);
+        return companyNetworkContractDAO.save(companyNetworkContract);
+    }
+
+    public <T extends org.web3j.tx.Contract> CompanyNetworkContract saveDeployInDB(T deployOut, String contractName, String version) throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, ContractNotFoundException {
+        Contract contract = getContract(contractName, version);
+        return saveDeployInDB(deployOut, contract);
     }
 
 }

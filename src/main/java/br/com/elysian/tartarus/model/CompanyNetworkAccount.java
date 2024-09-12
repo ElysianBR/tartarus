@@ -15,8 +15,8 @@ import java.math.BigInteger;
 @NoArgsConstructor
 @Entity
 @IdClass(CompanyNetworkAccountPK.class)
-@Table(schema = "tartarus", name = "account_company_network")
-public class AccountCompanyNetwork {
+@Table(schema = "tartarus", name = "company_network_account")
+public class CompanyNetworkAccount {
 
     @Id
     @OneToOne

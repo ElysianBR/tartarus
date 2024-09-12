@@ -39,6 +39,7 @@ public class BlockchainUtils {
     }
 
     public static BigInteger getBaseFee(Web3j web3j) throws IOException {
+        System.out.println(web3j.ethBaseFee().send().getResult());
         return web3j.ethBaseFee().send().getBaseFee();
     }
 

@@ -1,7 +1,7 @@
 package br.com.elysian.tartarus.model;
 
-import br.com.elysian.tartarus.dto.v1.CreateAccountDTO;
-import br.com.elysian.tartarus.dto.v1.SaveAccountDTO;
+import br.com.elysian.tartarus.dto.v1.RegisterDTO;
+import br.com.elysian.tartarus.dto.v1.PutAccountDTO;
 import br.com.elysian.tartarus.utils.PasswordUtils;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
@@ -15,6 +15,7 @@ import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 
@@ -39,7 +40,7 @@ public class Account {
 
 
     @Length(max = 30)
-    @Column(name = "first_name",  length = 30, nullable = false)
+    @Column(name = "first_name", length = 30, nullable = false)
     private String firstName;
 
 
@@ -57,18 +58,19 @@ public class Account {
     private String email;
 
 
-    @Column(name = "password", nullable = false)
     @JsonIgnore
+    @Column(name = "password", nullable = false)
     private String password;
 
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "account_role",
-            joinColumns = @JoinColumn(name = "account_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> accountRoles;
+    @JsonBackReference
+    @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
+    private Set<AccountRole> accountRoles;
+
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
+    private Set<Confirmation> confirmations;
 
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -78,10 +80,6 @@ public class Account {
             inverseJoinColumns = @JoinColumn(name = "company_id")
     )
     private Set<Company> companies;
-
-
-    @OneToMany(mappedBy = "account")
-    private Set<Confirmation> confirmations;
 
 
     public boolean isEnable() {
@@ -94,6 +92,7 @@ public class Account {
     }
 
 
+    @JsonIgnore
     public Optional<Confirmation> getEnableConfirmation() {
         for (Confirmation confirmation : confirmations) {
             if (confirmation.getType().getId() == 1) {
@@ -103,25 +102,43 @@ public class Account {
         return Optional.empty();
     }
 
+
+    @JsonIgnore
     public Set<Role> getActiveRoles() {
         Set<Role> roles = new HashSet<>();
-        for (Role role : this.accountRoles){
-            if (role.isActive()) {
-                roles.add(role);
+        for (AccountRole role : this.accountRoles) {
+            if (role.getRole().isActive()) {
+                roles.add(role.getRole());
             }
         }
         return roles;
     }
 
 
-    public Account(CreateAccountDTO createAccountDTO) {
-        this.firstName = createAccountDTO.getFirstName();
-        this.lastName = createAccountDTO.getLastName();
-        this.email = createAccountDTO.getEmail();
-        this.password = PasswordUtils.hashPassword(createAccountDTO.getPassword());
+    @JsonIgnore
+    public Role getDefaultRole() {
+        Iterator<AccountRole> iterator = this.accountRoles.iterator();
+        if (iterator.hasNext()) {
+            for (AccountRole role : this.accountRoles) {
+                if (role.getIsDefault()) {
+                    return role.getRole();
+                }
+            }
+            return this.accountRoles.iterator().next().getRole();
+        }
+        return null;
     }
 
-    public void setAccountFromDTO(SaveAccountDTO accountDTO) {
+
+    public Account(RegisterDTO registerDTO) {
+        this.firstName = registerDTO.getFirstName();
+        this.lastName = registerDTO.getLastName();
+        this.email = registerDTO.getEmail();
+        this.password = PasswordUtils.hashPassword(registerDTO.getPassword());
+    }
+
+    @JsonIgnore
+    public void setAccountFromDTO(PutAccountDTO accountDTO) {
         // TODO: Implements set Model from dynamic DTO.
         this.firstName = accountDTO.getFirstName();
         this.lastName = accountDTO.getLastName();

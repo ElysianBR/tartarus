@@ -15,6 +15,8 @@ import java.util.Date;
 @Setter
 public class AuthenticationAccount extends UsernamePasswordAuthenticationToken {
 
+    private GrantedAuthority selectedGranted;
+
     public AuthenticationAccount(Object principal, CredentialAccount credentials) {
         super(principal, credentials);
     }

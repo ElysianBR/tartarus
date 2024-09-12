@@ -8,6 +8,7 @@ import br.com.elysian.tartarus.utils.BlockchainUtils;
 import lombok.Getter;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.RemoteCall;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
@@ -43,7 +44,7 @@ public class ContractClient {
     private AbstractContract loadContract(CompanyNetworkContract contract, ContractGasProvider gasProvider) throws ContractLoadFailed {
         try {
             String contractAddress = contract.getContractAddress();
-            String binary = contract.getContract().getBin();
+            String binary = contract.getPk().getContract().getBin();
 
             return new AbstractContract(binary, contractAddress, web3j, transactionManager, gasProvider);
 
@@ -72,7 +73,7 @@ public class ContractClient {
 
     public StaticEIP1559GasProvider getDeployGasProvider(String binary) throws IOException {
         String fromAddress = transactionManager.getFromAddress();
-        BigInteger baseFee = BlockchainUtils.getBaseFee(web3j);
+        BigInteger baseFee = BlockchainUtils.getGasPrice(web3j);
         BigInteger maxFeePerGas = baseFee.add(DEFAULT_MAX_PRIORITY_FEE_PER_GAS);
         BigInteger estimateGas = BlockchainUtils.getEstimatedGasPriceToDeploy(web3j, baseFee, fromAddress, binary);
         return getEIP1559GasProvider(maxFeePerGas, estimateGas);
@@ -112,18 +113,31 @@ public class ContractClient {
     }
 
 
-    public <T extends Contract> CompletableFuture<T> deploy(br.com.elysian.tartarus.model.Contract contract, Class<T> clazz) throws Exception {
+    public <T extends Contract> RemoteCall<T> deploy(br.com.elysian.tartarus.model.Contract contract, Class<T> clazz, ContractGasProvider gasProvider) throws Exception {
         String binary = contract.getBin();
-
-        ContractGasProvider gasProvider = getDeployGasProvider(binary);
-
         return Contract.deployRemoteCall(
                 clazz, web3j, transactionManager, gasProvider, binary, ""
-        ).sendAsync();
+        );
     }
 
-    public CompletableFuture<AbstractContract> deploy(br.com.elysian.tartarus.model.Contract contract) throws Exception {
+    public <T extends Contract> RemoteCall<T> deploy(br.com.elysian.tartarus.model.Contract contract, Class<T> clazz) throws Exception {
+        String binary = contract.getBin();
+        ContractGasProvider gasProvider = getDeployGasProvider(binary);
+        return this.deploy(contract, clazz, gasProvider);
+    }
+
+    public <T extends Contract> RemoteCall<T> deploy(br.com.elysian.tartarus.model.Contract contract, Class<T> clazz, RequestSpecDTO specDTO) throws Exception {
+        String binary = contract.getBin();
+        ContractGasProvider gasProvider = getDeployGasProvider(binary, specDTO);
+        return this.deploy(contract, clazz, gasProvider);
+    }
+
+    public RemoteCall<AbstractContract> deploy(br.com.elysian.tartarus.model.Contract contract) throws Exception {
         return this.deploy(contract, AbstractContract.class);
+    }
+
+    public  RemoteCall<AbstractContract> deploy(br.com.elysian.tartarus.model.Contract contract, RequestSpecDTO specDTO) throws Exception {
+        return this.deploy(contract, AbstractContract.class, specDTO);
     }
 
 }

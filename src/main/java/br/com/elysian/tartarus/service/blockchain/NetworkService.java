@@ -8,9 +8,7 @@ import br.com.elysian.tartarus.dto.v1.blockchain.SavePrivateKeyDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.*;
 import br.com.elysian.tartarus.model.pk.CompanyNetworkAccountPK;
-import br.com.elysian.tartarus.model.pk.CompanyNetworkContractPK;
 import br.com.elysian.tartarus.model.pk.CompanyNetworkPK;
-import br.com.elysian.tartarus.model.pk.ContractPK;
 import br.com.elysian.tartarus.repository.*;
 import br.com.elysian.tartarus.service.AccountService;
 import br.com.elysian.tartarus.service.AuthService;
@@ -22,21 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.web3j.crypto.Credentials;
-import org.web3j.protocol.Web3j;
-import org.web3j.protocol.http.HttpService;
-import org.web3j.tx.ClientTransactionManager;
-import org.web3j.tx.RawTransactionManager;
-import org.web3j.tx.TransactionManager;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.IOException;
 import java.security.InvalidKeyException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -76,7 +65,7 @@ public class NetworkService {
 
 
     public void with(String networkTag) throws NetworkNotFoundException {
-        AuthenticationAccount authenticationAccount = authService.getCurrentAuthentication();
+        AuthenticationAccount authenticationAccount = AuthService.getCurrentAuthentication();
 
         if (networkDAO.existsByTag(networkTag)) {
             ((CredentialAccount) authenticationAccount.getCredentials()).setNetworkTag(networkTag);
@@ -98,7 +87,7 @@ public class NetworkService {
 
 
     public CompanyNetwork getCompanyNetworkLoggedIn() throws NetworkNotFoundException, CompanyNotLoggedInException, NetworkNotLoggedInException {
-        AuthenticationAccount authentication = authService.getCurrentAuthentication();
+        AuthenticationAccount authentication = AuthService.getCurrentAuthentication();
         CredentialAccount credentialAccount = (CredentialAccount) authentication.getCredentials();
         String networkTag = credentialAccount.getNetworkTag();
 
@@ -119,13 +108,13 @@ public class NetworkService {
     }
 
 
-    public AccountCompanyNetwork getAccountCompanyNetworkLoggedIn() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException {
+    public CompanyNetworkAccount getAccountCompanyNetworkLoggedIn() throws NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, AccountNotRegisteredInCompanyNetworkException {
         CompanyNetwork companyNetwork = this.getCompanyNetworkLoggedIn();
         Account account = accountService.getAccountLoggedIn();
 
         CompanyNetworkAccountPK pk = new CompanyNetworkAccountPK(companyNetwork, account);
 
-        Optional<AccountCompanyNetwork> companyNetworkAccount = this.accountCompanyNetworkDAO.findById(pk);
+        Optional<CompanyNetworkAccount> companyNetworkAccount = this.accountCompanyNetworkDAO.findById(pk);
 
         if (companyNetworkAccount.isPresent()) {
             return companyNetworkAccount.get();
@@ -136,12 +125,12 @@ public class NetworkService {
 
 
     public String getPrivateKey(String password) throws NetworkNotLoggedInException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NetworkNotFoundException, PrivateKeyNotSet, InvalidUsernameOrPasswordException {
-        AccountCompanyNetwork accountCompanyNetwork = this.getAccountCompanyNetworkLoggedIn();
-        String hashedPassword = accountCompanyNetwork.getAccount().getPassword();
+        CompanyNetworkAccount companyNetworkAccount = this.getAccountCompanyNetworkLoggedIn();
+        String hashedPassword = companyNetworkAccount.getAccount().getPassword();
 
         if (PasswordUtils.verifyPassword(password, hashedPassword)) {
 
-            String hashedPrivateKey = accountCompanyNetwork.getPrivateKey();
+            String hashedPrivateKey = companyNetworkAccount.getPrivateKey();
 
             if (hashedPrivateKey != null) {
 
@@ -165,10 +154,10 @@ public class NetworkService {
 
 
     public SuccessDTO savePrivateKey(SavePrivateKeyDTO savePrivateKeyDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NetworkNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        AccountCompanyNetwork accountCompanyNetwork = this.getAccountCompanyNetworkLoggedIn();
+        CompanyNetworkAccount companyNetworkAccount = this.getAccountCompanyNetworkLoggedIn();
 
         String password = savePrivateKeyDTO.getPassword();
-        String hashedPassword = accountCompanyNetwork.getAccount().getPassword();
+        String hashedPassword = companyNetworkAccount.getAccount().getPassword();
 
         if (PasswordUtils.verifyPassword(password, hashedPassword)) {
 
@@ -177,9 +166,9 @@ public class NetworkService {
             SecretKeySpec secret = BlockchainUtils.getKeyFromPassword(password);
             String hashedPrivateKey = BlockchainUtils.encryptPrivateKey(privateKeyPlain, secret);
 
-            accountCompanyNetwork.setPrivateKey(hashedPrivateKey);
+            companyNetworkAccount.setPrivateKey(hashedPrivateKey);
 
-            accountCompanyNetworkDAO.save(accountCompanyNetwork);
+            accountCompanyNetworkDAO.save(companyNetworkAccount);
 
             return new SuccessDTO(true, messageService.getMessage("tartarus.blockchain.network.save-private-key"));
 
@@ -206,11 +195,11 @@ public class NetworkService {
 
     public ArrayList<NetworkDTO> getRegisteredNetworks() {
         Account account = accountService.getAccountLoggedIn();
-        Set<AccountCompanyNetwork> accountCompanyNetworks = accountCompanyNetworkDAO.findByAccount(account);
+        Set<CompanyNetworkAccount> companyNetworkAccounts = accountCompanyNetworkDAO.findByAccount(account);
 
 
         ArrayList<NetworkDTO> networks = new ArrayList<>();
-        for (AccountCompanyNetwork network : accountCompanyNetworks) {
+        for (CompanyNetworkAccount network : companyNetworkAccounts) {
             networks.add(new NetworkDTO(network.getCompanyNetwork().getNetwork()));
         }
 

@@ -26,13 +26,13 @@ public class Contract {
     @Column(name = "version")
     private String version;
 
-    @Column(name = "className", unique = true)
+    @Column(name = "class_name", unique = true)
     private String className;
 
-    @Column(name = "bin")
+    @Column(name = "bin", columnDefinition = "TEXT")
     private String bin;
 
-    @Column(name = "aba")
-    private String aba;
+    @Column(name = "abi", columnDefinition = "TEXT")
+    private String abi;
 
 }

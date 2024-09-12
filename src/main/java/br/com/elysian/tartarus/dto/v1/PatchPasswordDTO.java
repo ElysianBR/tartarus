@@ -1,34 +1,22 @@
 package br.com.elysian.tartarus.dto.v1;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
 
 @Getter
-public class CreateAccountDTO {
+@AllArgsConstructor
+public class PatchPasswordDTO {
 
     @NotNull
-    @NotBlank
-    @Length(max = 30)
-    private String firstName;
+    private String oldPassword;
 
     @NotNull
-    @NotBlank
-    @Length(max = 50)
-    private String lastName;
-
-    @NotNull
-    @NotBlank
-    @Email
-    private String email;
-
-    @NotNull
-    @NotBlank
     @Length(min = 9)
     @Pattern(regexp = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{9,}$", message="{tartarus.validations.invalid-password}")
-    private String password;
+    private String newPassword;
 
 }

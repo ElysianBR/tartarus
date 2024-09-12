@@ -5,11 +5,7 @@ import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.*;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetwork;
-import br.com.elysian.tartarus.model.Contract;
 import br.com.elysian.tartarus.service.AuthService;
-import br.com.elysian.tartarus.service.blockchain.AbstractContract;
-import br.com.elysian.tartarus.service.blockchain.ContractClient;
-import br.com.elysian.tartarus.service.blockchain.ContractService;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,20 +21,17 @@ import javax.crypto.NoSuchPaddingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/blockchain/network")
 public class NetworkController {
 
     private final AuthService authService;
-    private final ContractService contractService;
     private final NetworkService networkService;
 
     @Autowired
-    public NetworkController(AuthService authService, ContractService contractService, NetworkService networkService) {
+    public NetworkController(AuthService authService, NetworkService networkService) {
         this.authService = authService;
-        this.contractService = contractService;
         this.networkService = networkService;
     }
 
@@ -82,33 +75,12 @@ public class NetworkController {
         return ResponseEntity.ok(token);
     }
 
-
-    @PostMapping("/save-private-key")
+    @PatchMapping("/private-key")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<SuccessDTO> savePrivateKey(@Valid @RequestBody SavePrivateKeyDTO savePrivateKeyDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkNotFoundException {
+    public ResponseEntity<SuccessDTO> putPrivateKey(@Valid @RequestBody SavePrivateKeyDTO savePrivateKeyDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkNotFoundException {
         return ResponseEntity.ok(
                 networkService.savePrivateKey(savePrivateKeyDTO)
         );
     }
-
-
-    @PostMapping("/getContract")
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<ContractDTO> getContract(@Valid @RequestBody GetContractDTO getContractDTO) throws Exception {
-        return ResponseEntity.ok(
-                new ContractDTO(
-                        contractService.getContract(getContractDTO.getName(), getContractDTO.getVersion())
-                )
-        );
-    }
-
-
-//    @PostMapping("/executeFunc")
-//    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-//    public ResponseEntity<OutFuncDTO> executeFunc(@Valid @RequestBody ExecuteFuncDTO executeFuncDTO) throws Exception {
-//        return ResponseEntity.ok(
-//
-//        );
-//    }
 
 }

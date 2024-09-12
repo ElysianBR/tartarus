@@ -14,17 +14,11 @@ import java.math.BigInteger;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@IdClass(CompanyNetworkContractPK.class)
 @Table(schema = "tartarus", name = "company_network_contract")
 public class CompanyNetworkContract {
 
-    @Id
-    @OneToOne
-    private CompanyNetwork companyNetwork;
-
-    @Id
-    @OneToOne
-    private Contract contract;
+    @EmbeddedId
+    private CompanyNetworkContractPK pk;
 
 
     @Column(name = "max_gas_wei", nullable = false)

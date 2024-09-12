@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 
 public class AuthenticationFilter extends GenericFilterBean {
 
-    private AuthService authService;
+    private final AuthService authService;
 
     public AuthenticationFilter(AuthService authService) {
         this.authService = authService;
@@ -28,7 +28,7 @@ public class AuthenticationFilter extends GenericFilterBean {
         try {
             String token = this.authService.resolveToken((HttpServletRequest) request);
             AuthenticationAccount authentication = authService.getAuthentication(token);
-            authService.setCurrentAuthentication(authentication);
+            AuthService.setCurrentAuthentication(authentication);
 
             filterChain.doFilter(request, response);
         } catch (Exception exp) {

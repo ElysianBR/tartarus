@@ -40,48 +40,33 @@ public class WebSecurityConfig {
         this.authService = authService;
     }
 
-//    @Bean
-//    public WebSecurityCustomizer webSecurityCustomizer() {
-//        return (web) -> web.ignoring().requestMatchers(
-//                WebSecurityConfig.NO_AUTH_PATHS
-//        );
-//    }
-
-
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }
-
-
-    private HttpSecurity setDefaultPropsHttpSecurity(HttpSecurity http) throws Exception {
-        return http.csrf(AbstractHttpConfigurer::disable)
-                .headers(httpSecurityHeadersConfigurer ->
-                        httpSecurityHeadersConfigurer
-                                .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .sessionManagement(sessionManagement ->
-                        sessionManagement
-                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-    }
-
-    @Bean
-    @Order(1)
-    public SecurityFilterChain noAuthFilter(HttpSecurity http) throws Exception {
-        setDefaultPropsHttpSecurity(http)
-                .authorizeHttpRequests(authorize ->
-                        authorize
-                                .requestMatchers(NO_AUTH_PATHS).permitAll());
-        return http.build();
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+                WebSecurityConfig.NO_AUTH_PATHS
+        );
     }
 
     @Bean
     public SecurityFilterChain authFilter(HttpSecurity http) throws Exception {
-        return setDefaultPropsHttpSecurity(http)
+        return http
+                .csrf(AbstractHttpConfigurer::disable)
+
+                .headers(httpSecurityHeadersConfigurer ->
+                        httpSecurityHeadersConfigurer
+                                .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+
+                .sessionManagement(sessionManagement ->
+                        sessionManagement
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(authorize ->
                         authorize
                                 .anyRequest().authenticated())
+
                 .addFilterBefore(new AuthenticationFilter(authService), UsernamePasswordAuthenticationFilter.class)
-        .build();
+
+                .build();
     }
 
     @PostConstruct

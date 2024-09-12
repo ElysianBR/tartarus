@@ -1,7 +1,7 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
 import br.com.elysian.tartarus.dto.v1.CompanyDTO;
-import br.com.elysian.tartarus.dto.v1.SaveCompanyDTO;
+import br.com.elysian.tartarus.dto.v1.PutCompanyDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.exception.CompanyNotFoundException;
 import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
@@ -35,13 +35,31 @@ public class CompanyController {
 
     @GetMapping()
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<CompanyDTO> getCompany() throws CompanyNotLoggedInException {
-        Company company = companyService.getCompanyLoggedIn();
-
+    public ResponseEntity<Company> get() throws CompanyNotLoggedInException {
         return ResponseEntity.ok(
-                new CompanyDTO(company)
+                companyService.getCompanyLoggedIn()
         );
     }
+
+
+    @PutMapping()
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public ResponseEntity<Company> put(@Valid @RequestBody PutCompanyDTO companyDTO) {
+        return ResponseEntity.ok(
+                companyService.put(companyDTO)
+        );
+    }
+
+
+//    @PatchMapping()
+//    @PreAuthorize("hasAnyAuthority('BUSINESS_ADMIN')")
+//    public ResponseEntity<CompanyDTO> patch(@Valid @RequestBody SaveCompanyDTO companyDTO) throws CompanyNotLoggedInException {
+//        return ResponseEntity.ok(
+//                new CompanyDTO(
+//                        companyService.update(companyDTO)
+//                )
+//        );
+//    }
 
 
     @PostMapping("/with")
@@ -69,28 +87,6 @@ public class CompanyController {
         });
 
         return ResponseEntity.ok(companyDTOS);
-    }
-
-
-    @GetMapping("/create")
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
-    public ResponseEntity<CompanyDTO> create(@Valid @RequestBody SaveCompanyDTO companyDTO) {
-        return ResponseEntity.ok(
-                new CompanyDTO(
-                        companyService.create(companyDTO)
-                )
-        );
-    }
-
-
-    @GetMapping("/update")
-    @PreAuthorize("hasAnyAuthority('BUSINESS_ADMIN')")
-    public ResponseEntity<CompanyDTO> update(@Valid @RequestBody SaveCompanyDTO companyDTO) throws CompanyNotLoggedInException {
-        return ResponseEntity.ok(
-                new CompanyDTO(
-                        companyService.update(companyDTO)
-                )
-        );
     }
 
 

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -36,24 +37,23 @@ public class AccountController {
 
 
     @GetMapping()
+    @Transactional
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<AccountDTO> getAccount() {
+    public ResponseEntity<Account> get() {
         return ResponseEntity.ok(
-                new AccountDTO(
-                        accountService.getAccountLoggedIn()
-                )
+                accountService.getAccountLoggedIn()
         );
     }
 
 
-    @PostMapping("/create")
-    public ResponseEntity<TokenDTO> create(@Valid @RequestBody CreateAccountDTO createAccountDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException, InvalidUsernameOrPasswordException {
+    @PostMapping("/register")
+    public ResponseEntity<TokenDTO> register(@Valid @RequestBody RegisterDTO registerDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException, InvalidUsernameOrPasswordException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);
         }
 
-        Account account = accountService.saveUser(createAccountDTO);
+        Account account = accountService.register(registerDTO);
         TokenDTO token = authService.getAuthorization(account);
         authService.setHeaders(token, response);
 
@@ -61,34 +61,32 @@ public class AccountController {
     }
 
 
+    @PutMapping()
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public ResponseEntity<Account> put(@Valid @RequestBody PutAccountDTO accountDTO) {
+        return ResponseEntity.ok(
+                accountService.put(accountDTO)
+        );
+    }
+
+
     @PostMapping("/confirm")
-    public ResponseEntity<SuccessDTO> confirmAccount(@RequestParam("sequenceToken") String sequenceToken) {
+    public ResponseEntity<SuccessDTO> confirm(@RequestParam("sequenceToken") String sequenceToken) {
         return ResponseEntity.ok(
                 accountService.confirmAccount(sequenceToken)
         );
     }
 
 
-    @PostMapping("/update")
+    @PatchMapping("/password")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<AccountDTO> update(@Valid @RequestBody SaveAccountDTO accountDTO) {
-        return ResponseEntity.ok(
-                new AccountDTO(
-                        accountService.saveAccount(accountDTO)
-                )
-        );
-    }
-
-
-    @PostMapping("/update-password")
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<TokenDTO> updatePassword(@Valid @RequestBody SavePasswordDTO savePasswordDTO, HttpServletRequest request, HttpServletResponse response) throws NewPasswordEqualsOldPasswordException, MismatchedPasswordsException, InvalidUsernameOrPasswordException, ReCaptchaUnavailableException, ReCaptchaInvalidException {
+    public ResponseEntity<TokenDTO> updatePassword(@Valid @RequestBody PatchPasswordDTO patchPasswordDTO, HttpServletRequest request, HttpServletResponse response) throws NewPasswordEqualsOldPasswordException, MismatchedPasswordsException, InvalidUsernameOrPasswordException, ReCaptchaUnavailableException, ReCaptchaInvalidException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);
         }
 
-        Account account = accountService.updatePassword(savePasswordDTO);
+        Account account = accountService.updatePassword(patchPasswordDTO);
 
         TokenDTO token = authService.getAuthorization(account);
         authService.setHeaders(token, response);

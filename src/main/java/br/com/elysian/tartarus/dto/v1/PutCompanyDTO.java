@@ -6,12 +6,12 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class SaveCompanyDTO {
+public class PutCompanyDTO {
 
     private String cnpj;
     private String companyName;
 
-    public SaveCompanyDTO(Company company) {
+    public PutCompanyDTO(Company company) {
         this.cnpj = company.getCnpj();
         this.companyName = company.getCompanyName();
     }

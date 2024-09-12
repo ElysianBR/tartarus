@@ -13,10 +13,10 @@ WHERE NOT EXISTS (SELECT 1 FROM "tartarus".role WHERE id = 'ACCOUNT');
 
 
 INSERT INTO "tartarus".role(id, description, active)
-SELECT 'BUSINESS_ADMIN',
+SELECT 'COMPANY_ADMIN',
        'Business Administrator Group',
        TRUE
-WHERE NOT EXISTS (SELECT 1 FROM "tartarus".role WHERE id = 'BUSINESS_ADMIN');
+WHERE NOT EXISTS (SELECT 1 FROM "tartarus".role WHERE id = 'COMPANY_ADMIN');
 
 
 INSERT INTO "tartarus".account(active, id, first_name, last_name, email, password)
@@ -57,8 +57,8 @@ WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account_role WHERE account_id = 1 AND
 
 INSERT INTO "tartarus".account_role(account_id, role_id)
 SELECT 1,
-       'BUSINESS_ADMIN'
-WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account_role WHERE account_id = 1 AND role_id = 'BUSINESS_ADMIN');
+       'COMPANY_ADMIN'
+WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account_role WHERE account_id = 1 AND role_id = 'COMPANY_ADMIN');
 
 
 INSERT INTO "tartarus".confirmation_type(id, description)
@@ -143,15 +143,14 @@ SELECT 1,
 WHERE NOT EXISTS(SELECT 1 FROM "tartarus".company_network WHERE company_id = 1 AND blockchain_id = 1);
 
 
-INSERT INTO "tartarus".account_company_network(account_id, company_network_blockchain_id, company_network_company_id,
-                                               address, max_gas_wei)
+INSERT INTO "tartarus".company_network_account(account_id, blockchain_id, company_id, address, max_gas_wei)
 SELECT 1,
        1,
        1,
        '0xBB4520524293176B981f3e9Fc1bFe167b08Daa51',
        0
 WHERE NOT EXISTS (SELECT 1
-                  FROM "tartarus".account_company_network
+                  FROM "tartarus".company_network_account
                   WHERE account_id = 1
-                    AND company_network_blockchain_id = 1
-                    AND company_network_company_id = 1);
+                    AND blockchain_id = 1
+                    AND company_id = 1);

@@ -6,8 +6,10 @@ import br.com.elysian.tartarus.dto.v1.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.model.Account;
+import br.com.elysian.tartarus.model.AccountRole;
 import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.repository.AccountDAO;
+import br.com.elysian.tartarus.repository.AccountRoleDAO;
 import br.com.elysian.tartarus.service.jwt.JwtBuilder;
 import br.com.elysian.tartarus.service.jwt.JwtService;
 import br.com.elysian.tartarus.utils.PasswordUtils;
@@ -19,7 +21,6 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,9 +40,9 @@ public class AuthService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
 
-    private final AuthenticationManager authenticationManager;
     private final MessageService messageService;
     private final AccountDAO accountDAO;
+    private final AccountRoleDAO accountRoleDAO;
     private final JwtService jwtService;
     @Getter
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -53,22 +55,19 @@ public class AuthService {
 
 
     @Autowired
-    private AuthService(AuthenticationManager authenticationManager, MessageService messageService, AccountDAO accountDAO, JwtService jwtUtil) {
-        this.authenticationManager = authenticationManager;
+    private AuthService(MessageService messageService, AccountDAO accountDAO, AccountRoleDAO accountRoleDAO, JwtService jwtUtil) {
         this.messageService = messageService;
         this.accountDAO = accountDAO;
+        this.accountRoleDAO = accountRoleDAO;
         this.jwtService = jwtUtil;
     }
 
-    public AuthenticationAccount getCurrentAuthentication() {
+    public static AuthenticationAccount getCurrentAuthentication() {
         return (AuthenticationAccount) SecurityContextHolder.getContext().getAuthentication();
     }
 
-    public void setCurrentAuthentication(Authentication authentication) {
+    public static void setCurrentAuthentication(Authentication authentication) {
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        authenticationManager.authenticate(
-                authentication
-        );
     }
 
     public AuthenticationAccount getAuthentication(String jwtToken) {
@@ -91,8 +90,15 @@ public class AuthService {
 
                         ArrayList<GrantedAuthority> grantedAuthorities = new ArrayList<>();
 
-                        for (Role role : account.getAccountRoles()) {
-                            if (role.isActive()) grantedAuthorities.add(new SimpleGrantedAuthority(role.getId()));
+                        for (Role role : account.getActiveRoles()) {
+                            if (role.isActive()) {
+                                grantedAuthorities.add(new SimpleGrantedAuthority(role.getId()));
+                            }
+                        }
+
+                        GrantedAuthority selectedGranted = null;
+                        if (getDefaultRole(account) != null) {
+                            selectedGranted = new SimpleGrantedAuthority(getDefaultRole(account).getId());
                         }
 
 
@@ -105,11 +111,15 @@ public class AuthService {
                         credential.setClaims(claims);
 
 
-                        return new AuthenticationAccount(
+                        AuthenticationAccount authAccount = new AuthenticationAccount(
                                 account.getId(),
                                 credential,
                                 grantedAuthorities
                         );
+
+                        authAccount.setSelectedGranted(selectedGranted);
+
+                        return authAccount;
 
                     }
                 }
@@ -120,6 +130,15 @@ public class AuthService {
         }
 
         throw new BadCredentialsException(messageService.getMessage("tartarus.authorization.header.invalid-bearer"));
+    }
+
+
+    public Role getDefaultRole(Account account) {
+        List<AccountRole> roles = accountRoleDAO.findByAccountAndIsDefault(account, true);
+        if (!roles.isEmpty()) {
+            return roles.getFirst().getRole();
+        }
+        return null;
     }
 
 
@@ -169,7 +188,7 @@ public class AuthService {
 
 
     public TokenDTO getAuthorizationByCurrentAuthentication() throws InvalidUsernameOrPasswordException {
-        AuthenticationAccount auth = this.getCurrentAuthentication();
+        AuthenticationAccount auth = AuthService.getCurrentAuthentication();
 
         Long idUser = (Long) auth.getPrincipal();
 
