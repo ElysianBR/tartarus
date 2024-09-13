@@ -26,15 +26,6 @@ public class JacksonConfig {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"));
 
-
-
-        // Register Views Role
-        AuthenticationAccount auth = AuthService.getCurrentAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            String role = auth.getSelectedGranted().getAuthority();
-            objectMapper.setConfig(objectMapper.getSerializationConfig().withView(RoleViews.get(role)));
-        }
-
         return objectMapper;
     }
 }

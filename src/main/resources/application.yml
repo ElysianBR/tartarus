@@ -5,6 +5,10 @@ spring:
     datasource:
         driver-class-name: org.postgresql.Driver
 
+    jackson:
+        mapper:
+          default-view-inclusion: false
+
     jpa:
         generate-ddl: true
         open-in-view: false
