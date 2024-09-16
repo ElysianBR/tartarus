@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
@@ -18,8 +17,7 @@ import org.springframework.context.annotation.Configuration;
                 description = "Elysian documentation API",
                 version = "1.0.0",
                 contact = @Contact(name = "Elysian", url = "https://elysian.com.br", email = "development@elysian.com.br")
-        ),
-        security = @SecurityRequirement(name = "bearerAuth")
+        )
 )
 @SecurityScheme(
         name = "bearerAuth",
@@ -28,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
         bearerFormat = "JWT"
 )
 public class SwaggerConfig {
+
 
     @Bean
     public GroupedOpenApi v1Api() {

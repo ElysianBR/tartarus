@@ -1,16 +1,14 @@
-package br.com.elysian.tartarus.dto.v1;
+package br.com.elysian.tartarus.dto.v1.post;
 
-import br.com.elysian.tartarus.service.MessageService;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.beans.factory.annotation.Value;
 
 @Getter
-public class RegistrationDTO {
+public class RegisterDTO {
 
     @NotNull
     @NotBlank

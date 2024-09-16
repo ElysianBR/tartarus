@@ -15,7 +15,7 @@ import java.math.BigInteger;
 @NoArgsConstructor
 @Entity
 @IdClass(CompanyNetworkAccountPK.class)
-@Table(schema = "tartarus", name = "account_company_network")
+@Table(schema = "tartarus", name = "company_network_account")
 public class CompanyNetworkAccount {
 
     @Id
@@ -29,6 +29,10 @@ public class CompanyNetworkAccount {
 
     @Column(name = "address")
     private String address;
+
+
+    @Column(name = "private")
+    private String privateKey;
 
 
     @Column(name = "max_gas_wei", nullable = false)

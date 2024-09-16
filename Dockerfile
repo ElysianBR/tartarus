@@ -4,4 +4,9 @@ WORKDIR /app
 COPY . /app
 RUN gradle build --no-daemon
 
-ENTRYPOINT [ "java" , "-jar" , "/app/build/libs/tartarus.jar" ]
+# Runtime image
+FROM openjdk:21-jdk-alpine
+WORKDIR /app
+COPY --from=builder /app/build/libs/tartarus.jar /app/tartarus.jar
+
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/tartarus.jar"]

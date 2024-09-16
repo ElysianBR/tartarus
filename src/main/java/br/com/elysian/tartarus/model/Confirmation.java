@@ -23,12 +23,10 @@ public class Confirmation {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
     @Id
-    @OneToOne
-    @JoinColumn(name = "type_id", nullable = false)
+    @ManyToOne
     private ConfirmationType type;
 
     @Column(name = "sequence", nullable = false, length = 6)

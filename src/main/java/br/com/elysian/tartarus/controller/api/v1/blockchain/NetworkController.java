@@ -1,24 +1,28 @@
 package br.com.elysian.tartarus.controller.api.v1.blockchain;
 
+import br.com.elysian.tartarus.dto.v1.SuccessDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
-import br.com.elysian.tartarus.dto.v1.blockchain.NetworkDTO;
-import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
-import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
-import br.com.elysian.tartarus.exception.NetworkNotFoundException;
-import br.com.elysian.tartarus.exception.NetworkNotLoggedInException;
+import br.com.elysian.tartarus.dto.v1.blockchain.*;
+import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetwork;
+import br.com.elysian.tartarus.model.Network;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/blockchain/network")
@@ -34,47 +38,52 @@ public class NetworkController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping()
-    public ResponseEntity<NetworkDTO> getNetwork() throws CompanyNotLoggedInException, NetworkNotLoggedInException, NetworkNotFoundException {
-        CompanyNetwork companyNetwork = networkService.getCompanyNetworkLoggedIn();
-
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public ResponseEntity<Network> getNetwork() throws CompanyNotLoggedInException, NetworkNotLoggedInException, NetworkNotFoundException {
         return ResponseEntity.ok(
-                new NetworkDTO(companyNetwork.getNetwork())
+                networkService
+                        .getCompanyNetworkLoggedIn()
+                        .getNetwork()
         );
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping("/registered-networks")
-    public ResponseEntity<ArrayList<NetworkDTO>> getRegisteredNetworks() {
-        ArrayList<NetworkDTO> networks = networkService.getRegisteredNetworks();
-        return ResponseEntity.ok(networks);
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public ResponseEntity<ArrayList<Network>> getRegisteredNetworks() {
+        return ResponseEntity.ok(
+                networkService.getRegisteredNetworks()
+        );
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping("/available-networks")
-    public ResponseEntity<ArrayList<NetworkDTO>> getAvailableNetworks() {
-        ArrayList<NetworkDTO> networks = networkService.getAvailableNetworks();
-        return ResponseEntity.ok(networks);
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public ResponseEntity<Set<Network>> getAvailableNetworks() {
+        return ResponseEntity.ok(
+                networkService.getAvailableNetworks()
+        );
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PatchMapping()
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    @PostMapping("/with")
-    public ResponseEntity<TokenDTO> networkWith(@RequestParam("tag") String networkTag, HttpServletResponse response) throws NetworkNotFoundException, InvalidUsernameOrPasswordException {
-        // TODO: Implementation for validation if account is registered in network selected!!
-        networkService.with(networkTag);
+    public ResponseEntity<TokenDTO> networkWith(@RequestParam("tag") String networkTag, HttpServletResponse response) throws NetworkNotFoundException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException {
+        networkService.patch(networkTag);
 
         TokenDTO token = authService.getAuthorizationByCurrentAuthentication();
         authService.setHeaders(token, response);
 
         return ResponseEntity.ok(token);
+    }
+
+    @PatchMapping("/private-key")
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public ResponseEntity<SuccessDTO> putPrivateKey(@Valid @RequestBody SavePrivateKeyDTO savePrivateKeyDTO) throws NetworkNotLoggedInException, CompanyNotLoggedInException, AccountNotRegisteredInCompanyNetworkException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NetworkNotFoundException {
+        return ResponseEntity.ok(
+                networkService.savePrivateKey(savePrivateKeyDTO)
+        );
     }
 
 }

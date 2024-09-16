@@ -1,27 +1,35 @@
 package br.com.elysian.tartarus.config.documentation;
 
 import br.com.elysian.tartarus.annotation.SecurityXSS;
+import br.com.elysian.tartarus.config.security.WebSecurityConfig;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
 import org.springdoc.core.customizers.OperationCustomizer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Component
 public class CustomOperationCustomizer implements OperationCustomizer {
 
+
     @Override
     public Operation customize(Operation operation, HandlerMethod handlerMethod) {
         generateGlobalPreAuthorize(operation, handlerMethod);
-        generateGlobalRequestHeader(operation,handlerMethod);
+        generateGlobalRequestHeader(operation, handlerMethod);
+        generateSecurityRequerement(operation, handlerMethod);
         return operation;
     }
 
@@ -82,5 +90,45 @@ public class CustomOperationCustomizer implements OperationCustomizer {
                 operation.setDescription(operation.getDescription());
             }
         }
+    }
+
+
+    private void generateSecurityRequerement(Operation operation, HandlerMethod handlerMethod) {
+        List<String> methodsPath = getMethodPath(handlerMethod);
+        boolean isNoAuthPath = isPathExcluded(methodsPath);
+
+        if (!isNoAuthPath) {
+            operation.security(
+                    List.of(new SecurityRequirement().addList("bearerAuth"))
+            );
+        }
+    }
+
+
+    private List<String> getMethodPath(HandlerMethod handlerMethod) {
+        String[] classPaths = Optional.ofNullable(handlerMethod.getBeanType().getAnnotation(RequestMapping.class))
+                .map(RequestMapping::value)
+                .orElse(new String[]{""});
+
+        String[] methodPaths = Optional.ofNullable(handlerMethod.getMethodAnnotation(RequestMapping.class))
+                .map(RequestMapping::path)
+                .orElse(new String[]{""});
+
+        return Arrays.stream(classPaths)
+                .flatMap(classPath -> Arrays.stream(methodPaths)
+                        .map(methodPath -> classPath + methodPath))
+                .collect(Collectors.toList());
+    }
+
+
+    private boolean isPathExcluded(List<String> methodsPath) {
+        for (String methodPath : methodsPath) {
+            for (String noAuthPath : WebSecurityConfig.getNO_AUTH_PATHS()) {
+                if (methodPath.matches(noAuthPath.replace("**", ".*"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

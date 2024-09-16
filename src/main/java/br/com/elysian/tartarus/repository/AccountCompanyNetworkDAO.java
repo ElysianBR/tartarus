@@ -6,7 +6,7 @@ import br.com.elysian.tartarus.model.pk.CompanyNetworkAccountPK;
 
 import java.util.Set;
 
-public interface CompanyNetworkAccountDAO extends CRUDRepository<CompanyNetworkAccount, CompanyNetworkAccountPK>{
+public interface AccountCompanyNetworkDAO extends CRUDRepository<CompanyNetworkAccount, CompanyNetworkAccountPK>{
 
     Set<CompanyNetworkAccount> findByAccount(Account account);
 

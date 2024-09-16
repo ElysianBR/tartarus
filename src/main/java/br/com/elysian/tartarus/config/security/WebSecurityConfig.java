@@ -2,10 +2,11 @@ package br.com.elysian.tartarus.config.security;
 
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationFilter;
 import br.com.elysian.tartarus.service.AuthService;
+import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -23,6 +25,12 @@ public class WebSecurityConfig {
 
     private AuthService authService;
 
+    @Getter
+    private static final String[] NO_AUTH_PATHS = new String[]{
+            "/swagger/**", "/swagger-ui/**", "/api-docs/**",
+            "/api/v1/auth/**", "/api/v1/account/register"
+    };
+
     @Autowired
     public WebSecurityConfig(AuthService authService) {
         this.authService = authService;
@@ -31,20 +39,35 @@ public class WebSecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
-                "/swagger/**", "/swagger-ui/**", "/api-docs/**",
-                "/error", "/api/v1/auth/**", "/api/v1/account/createAccount"
+                WebSecurityConfig.NO_AUTH_PATHS
         );
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .headers(httpSecurityHeadersConfigurer -> httpSecurityHeadersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry.anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults())
-                .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new AuthenticationFilter(authService), UsernamePasswordAuthenticationFilter.class);
-        return http.build();
+    public SecurityFilterChain authFilter(HttpSecurity http) throws Exception {
+        return http
+                .csrf(AbstractHttpConfigurer::disable)
+
+                .headers(httpSecurityHeadersConfigurer ->
+                        httpSecurityHeadersConfigurer
+                                .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+
+                .sessionManagement(sessionManagement ->
+                        sessionManagement
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .authorizeHttpRequests(authorize ->
+                        authorize
+                                .anyRequest().authenticated())
+
+                .addFilterBefore(new AuthenticationFilter(authService), UsernamePasswordAuthenticationFilter.class)
+
+                .build();
+    }
+
+    @PostConstruct
+    public void enableAuthCtxOnSpawnedThreads() {
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
     }
 
 }

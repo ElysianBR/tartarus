@@ -1,6 +1,8 @@
 package br.com.elysian.tartarus.model;
 
 import br.com.elysian.tartarus.model.pk.CompanyNetworkContractPK;
+import br.com.elysian.tartarus.view.RoleViews;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,17 +16,12 @@ import java.math.BigInteger;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@IdClass(CompanyNetworkContractPK.class)
 @Table(schema = "tartarus", name = "company_network_contract")
+//@JsonView(RoleViews.AccountView.class)
 public class CompanyNetworkContract {
 
-    @Id
-    @OneToOne
-    private CompanyNetwork companyNetwork;
-
-    @Id
-    @OneToOne
-    private Contract contract;
+    @EmbeddedId
+    private CompanyNetworkContractPK pk;
 
 
     @Column(name = "max_gas_wei", nullable = false)

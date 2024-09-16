@@ -1,13 +1,15 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
 import br.com.elysian.tartarus.dto.v1.*;
+import br.com.elysian.tartarus.dto.v1.patch.PasswordDTO;
+import br.com.elysian.tartarus.dto.v1.post.RegisterDTO;
+import br.com.elysian.tartarus.dto.v1.put.AccountDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.Account;
+import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.AccountService;
 import br.com.elysian.tartarus.service.captcha.CaptchaService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -15,7 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
 
 
 @RestController
@@ -37,26 +42,24 @@ public class AccountController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     @GetMapping()
-    public ResponseEntity<AccountDTO> getAccount() {
+    @Transactional
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public ResponseEntity<Account> get() {
         return ResponseEntity.ok(
-                new AccountDTO(
-                        accountService.getAccountLoggedIn()
-                )
+                accountService.getAccountLoggedIn()
         );
     }
 
 
-    @PostMapping("/create")
-    public ResponseEntity<TokenDTO> createAccount(@Valid @RequestBody RegistrationDTO registrationDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException, InvalidUsernameOrPasswordException {
+    @PostMapping("/register")
+    public ResponseEntity<TokenDTO> register(@Valid @RequestBody RegisterDTO registerDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException, InvalidUsernameOrPasswordException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);
         }
 
-        Account account = accountService.saveUser(registrationDTO);
+        Account account = accountService.register(registerDTO);
         TokenDTO token = authService.getAuthorization(account);
         authService.setHeaders(token, response);
 
@@ -64,37 +67,32 @@ public class AccountController {
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PutMapping()
+    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
+    public ResponseEntity<Account> put(@Valid @RequestBody AccountDTO accountDTO) {
+        return ResponseEntity.ok(
+                accountService.put(accountDTO)
+        );
+    }
+
+
     @PostMapping("/confirm")
-    public ResponseEntity<SuccessDTO> confirmAccount(@RequestParam("sequenceToken") String sequenceToken) {
+    public ResponseEntity<SuccessDTO> confirm(@RequestParam("sequenceToken") String sequenceToken) {
         return ResponseEntity.ok(
                 accountService.confirmAccount(sequenceToken)
         );
     }
 
 
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    @PatchMapping("/password")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    @PostMapping("/update")
-    public ResponseEntity<AccountDTO> update(@Valid @RequestBody SaveAccountDTO accountDTO) {
-        return ResponseEntity.ok(
-                new AccountDTO(
-                        accountService.saveAccount(accountDTO)
-                )
-        );
-    }
-
-
-    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    @PostMapping("/update-password")
-    public ResponseEntity<TokenDTO> updatePassword(@Valid @RequestBody SavePasswordDTO savePasswordDTO, HttpServletRequest request, HttpServletResponse response) throws NewPasswordEqualsOldPasswordException, MismatchedPasswordsException, InvalidUsernameOrPasswordException, ReCaptchaUnavailableException, ReCaptchaInvalidException {
+    public ResponseEntity<TokenDTO> updatePassword(@Valid @RequestBody PasswordDTO passwordDTO, HttpServletRequest request, HttpServletResponse response) throws NewPasswordEqualsOldPasswordException, MismatchedPasswordsException, InvalidUsernameOrPasswordException, ReCaptchaUnavailableException, ReCaptchaInvalidException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);
         }
 
-        Account account = accountService.updatePassword(savePasswordDTO);
+        Account account = accountService.updatePassword(passwordDTO);
 
         TokenDTO token = authService.getAuthorization(account);
         authService.setHeaders(token, response);
@@ -102,5 +100,23 @@ public class AccountController {
         return ResponseEntity.ok(token);
     }
 
+
+    @GetMapping("/roles")
+    public ResponseEntity<Set<Role>> getRoles() {
+            return ResponseEntity.ok(
+                    accountService.getRoles()
+            );
+    }
+
+
+    @PatchMapping("/roles")
+    public ResponseEntity<TokenDTO> patchRole(@RequestParam("roleId") String roleId, HttpServletResponse response) throws InvalidUsernameOrPasswordException, RoleNotFoundException {
+        accountService.patchRole(roleId);
+
+        TokenDTO token = authService.getAuthorizationByCurrentAuthentication();
+        authService.setHeaders(token, response);
+
+        return ResponseEntity.ok(token);
+    }
 
 }

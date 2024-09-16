@@ -13,10 +13,10 @@ WHERE NOT EXISTS (SELECT 1 FROM "tartarus".role WHERE id = 'ACCOUNT');
 
 
 INSERT INTO "tartarus".role(id, description, active)
-SELECT 'BUSINESS_ADMIN',
+SELECT 'COMPANY_ADMIN',
        'Business Administrator Group',
        TRUE
-WHERE NOT EXISTS (SELECT 1 FROM "tartarus".role WHERE id = 'BUSINESS_ADMIN');
+WHERE NOT EXISTS (SELECT 1 FROM "tartarus".role WHERE id = 'COMPANY_ADMIN');
 
 
 INSERT INTO "tartarus".account(active, id, first_name, last_name, email, password)
@@ -24,8 +24,13 @@ SELECT true, 0, 'SUPER', 'ADMIN', 'super@admin.com.br', '$2a$08$YqDAVHmSnvH0CpJ3
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account WHERE id = 0);
 
 
+INSERT INTO "tartarus".account(active, id, first_name, last_name, email, password)
+SELECT true, 1, 'User', 'One', 'user1@mail.com.br', '$2a$12$8MJBzmoj9LBQdJUXngszmeZSI8H7yEEuBhIXrsJWN1WJGRZQjJxDe'
+WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account WHERE id = 1);
+
+
 INSERT INTO "tartarus".company(id, active, cnpj, company_name)
-SELECT 0,
+SELECT 1,
        TRUE,
        '000000/000000',
        'company for development'
@@ -33,15 +38,9 @@ WHERE NOT EXISTS (SELECT 1 FROM "tartarus".company WHERE cnpj = '000000/000000')
 
 
 INSERT INTO "tartarus".company_account(account_id, company_id)
-SELECT 0,
-       0
-WHERE NOT EXISTS (SELECT 1 FROM "tartarus".company_account WHERE account_id = 0 AND company_id = 0);
-
-
-INSERT INTO "tartarus".account_role(account_id, role_id)
-SELECT 0,
-       'ACCOUNT'
-WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account_role WHERE account_id = 0 AND role_id = 'ACCOUNT');
+SELECT 1,
+       1
+WHERE NOT EXISTS (SELECT 1 FROM "tartarus".company_account WHERE account_id = 1 AND company_id = 1);
 
 
 INSERT INTO "tartarus".account_role(account_id, role_id)
@@ -51,9 +50,15 @@ WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account_role WHERE account_id = 0 AND
 
 
 INSERT INTO "tartarus".account_role(account_id, role_id)
-SELECT 0,
-       'BUSINESS_ADMIN'
-WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account_role WHERE account_id = 0 AND role_id = 'BUSINESS_ADMIN');
+SELECT 1,
+       'ACCOUNT'
+WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account_role WHERE account_id = 1 AND role_id = 'ACCOUNT');
+
+
+INSERT INTO "tartarus".account_role(account_id, role_id)
+SELECT 1,
+       'COMPANY_ADMIN'
+WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account_role WHERE account_id = 1 AND role_id = 'COMPANY_ADMIN');
 
 
 INSERT INTO "tartarus".confirmation_type(id, description)
@@ -68,12 +73,13 @@ SELECT 2,
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".confirmation_type WHERE id = 2);
 
 
-INSERT INTO "tartarus".blockchain(id, active, name, tag, description)
+INSERT INTO "tartarus".blockchain(id, active, name, tag, description, infura_key)
 SELECT 1,
        true,
        'Ethereum',
        'ETH',
-       'Ethereum Blockchain (Powered by EVM)'
+       'Ethereum Blockchain (Powered by EVM)',
+       '3d68fcabd2e8418991dd69df8082a322'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".blockchain WHERE id = 1);
 
 
@@ -89,7 +95,7 @@ SELECT 2,
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".network_type WHERE id = 2);
 
 
-INSERT INTO "tartarus".network(active, type_id, tag, blockchain_id, id, name, description, network_url)
+INSERT INTO "tartarus".network(active, type_id, tag, blockchain_id, id, name, description, network_url, infura_url)
 SELECT true,
        1,
        'SEPOL',
@@ -97,60 +103,54 @@ SELECT true,
        1,
        'Sepolia ETH',
        'Testnet Ethereum for development',
-       'https://rpc.sepolia.org'
+       'https://rpc2.sepolia.org',
+       'https://sepolia.infura.io/v3'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".network WHERE id = 1);
 
 
-INSERT INTO "tartarus".company_network(company_id, blockchain_id, max_gas_wei)
-SELECT 0,
-       1,
-       0
-WHERE NOT EXISTS(SELECT 1 FROM "tartarus".company_network WHERE company_id = 0 AND blockchain_id = 1);
-
-
-INSERT INTO "tartarus".contract(class_name, name, version, gas_price_wei)
+INSERT INTO "tartarus".contract(class_name, name, version)
 SELECT 'br.com.elysian.tartarus.blockchain.contracts.ethereum.v1.SupplyChainBase',
        'SupplyChainBase',
-       'v1',
-       0
+       'v1'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".contract WHERE name = 'SupplyChainBase' AND version = 'v1');
 
 
-INSERT INTO "tartarus".contract(class_name, name, version, gas_price_wei)
+INSERT INTO "tartarus".contract(class_name, name, version)
 SELECT 'br.com.elysian.tartarus.blockchain.contracts.ethereum.v1.ProductRegistry',
        'ProductRegistry',
-       'v1',
-       0
+       'v1'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".contract WHERE name = 'ProductRegistry' AND version = 'v1');
 
 
-INSERT INTO "tartarus".contract(class_name, name, version, gas_price_wei)
+INSERT INTO "tartarus".contract(class_name, name, version)
 SELECT 'br.com.elysian.tartarus.blockchain.contracts.ethereum.v1.ProductMovement',
        'ProductMovement',
-       'v1',
-       0
+       'v1'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".contract WHERE name = 'ProductMovement' AND version = 'v1');
 
 
-INSERT INTO "tartarus".contract(class_name, name, version, gas_price_wei)
+INSERT INTO "tartarus".contract(class_name, name, version)
 SELECT 'br.com.elysian.tartarus.blockchain.contracts.ethereum.v1.InventoryManagement',
        'InventoryManagement',
-       'v1',
-       0
+       'v1'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".contract WHERE name = 'InventoryManagement' AND version = 'v1');
 
 
-INSERT INTO "tartarus".company_network_contract(company_network_blockchain_id, company_network_company_id,
-                                                contract_address, contract_name, contract_version, max_gas_wei)
+INSERT INTO "tartarus".company_network(company_id, blockchain_id, max_gas_wei)
 SELECT 1,
-       0,
-       '',
-       'SupplyChainBase',
-       'v1',
+       1,
+       0
+WHERE NOT EXISTS(SELECT 1 FROM "tartarus".company_network WHERE company_id = 1 AND blockchain_id = 1);
+
+
+INSERT INTO "tartarus".company_network_account(account_id, blockchain_id, company_id, address, max_gas_wei)
+SELECT 1,
+       1,
+       1,
+       '0xBB4520524293176B981f3e9Fc1bFe167b08Daa51',
        0
 WHERE NOT EXISTS (SELECT 1
-                  FROM "tartarus".company_network_contract
-                  WHERE company_network_blockchain_id = 1
-                    AND company_network_company_id = 0
-                    AND contract_name = 'SupplyChainBase'
-                    AND contract_version = 'V1')
+                  FROM "tartarus".company_network_account
+                  WHERE account_id = 1
+                    AND blockchain_id = 1
+                    AND company_id = 1);

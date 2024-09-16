@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.dto.v1;
+package br.com.elysian.tartarus.dto.v1.post;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -1,5 +1,7 @@
 package br.com.elysian.tartarus.model;
 
+import br.com.elysian.tartarus.view.RoleViews;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,6 +15,7 @@ import org.hibernate.annotations.ColumnDefault;
 @NoArgsConstructor
 @Entity
 @Table(schema = "tartarus", name = "network")
+//@JsonView(RoleViews.AccountView.class)
 public class Network {
 
     @Id
@@ -44,6 +47,9 @@ public class Network {
     @OneToOne
     @JoinColumn(name = "blockchain_id")
     private Blockchain blockchain;
+
+    @Column(name = "infura_url")
+    private String infuraUrl;
 
 
     public String getNetworkNameFormated() {

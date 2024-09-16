@@ -1,6 +1,6 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.dto.v1.LoginDTO;
+import br.com.elysian.tartarus.dto.v1.post.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.exception.ReCaptchaInvalidException;
@@ -9,7 +9,6 @@ import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.captcha.CaptchaService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

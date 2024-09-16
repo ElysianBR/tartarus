@@ -2,19 +2,16 @@ package br.com.elysian.tartarus.service;
 
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
 import br.com.elysian.tartarus.dto.v1.*;
-import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
-import br.com.elysian.tartarus.exception.MismatchedPasswordsException;
-import br.com.elysian.tartarus.exception.NewPasswordEqualsOldPasswordException;
-import br.com.elysian.tartarus.model.Account;
-import br.com.elysian.tartarus.model.Confirmation;
-import br.com.elysian.tartarus.model.ConfirmationType;
-import br.com.elysian.tartarus.model.Role;
-import br.com.elysian.tartarus.repository.ConfirmationDAO;
-import br.com.elysian.tartarus.repository.ConfirmationTypeDAO;
-import br.com.elysian.tartarus.repository.RoleDAO;
-import br.com.elysian.tartarus.repository.AccountDAO;
+import br.com.elysian.tartarus.dto.v1.patch.PasswordDTO;
+import br.com.elysian.tartarus.dto.v1.post.RegisterDTO;
+import br.com.elysian.tartarus.dto.v1.put.AccountDTO;
+import br.com.elysian.tartarus.exception.*;
+import br.com.elysian.tartarus.model.*;
+import br.com.elysian.tartarus.model.pk.AccountRolePK;
+import br.com.elysian.tartarus.repository.*;
 import br.com.elysian.tartarus.utils.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -27,28 +24,30 @@ public class AccountService {
     private final MessageService messageService;
     private final AuthService authService;
     private final AccountDAO accountDAO;
+    private final AccountRoleDAO accountRoleDAO;
     private final RoleDAO roleDAO;
     private final ConfirmationDAO confirmationDAO;
     private final ConfirmationTypeDAO confirmationTypeDAO;
 
 
     @Autowired
-    public AccountService(MessageService messageService, AuthService authService, AccountDAO accountDAO, RoleDAO roleDAO, ConfirmationDAO confirmationMailRep, ConfirmationTypeDAO confirmationTypeDAO) {
+    public AccountService(MessageService messageService, AuthService authService, AccountDAO accountDAO, AccountRoleDAO accountRoleDAO, RoleDAO roleDAO, ConfirmationDAO confirmationMailRep, ConfirmationTypeDAO confirmationTypeDAO) {
         this.messageService = messageService;
         this.authService = authService;
         this.accountDAO = accountDAO;
+        this.accountRoleDAO = accountRoleDAO;
         this.roleDAO = roleDAO;
         this.confirmationDAO = confirmationMailRep;
         this.confirmationTypeDAO = confirmationTypeDAO;
     }
 
-    public Account saveUser(RegistrationDTO registrationDTO) throws EmailAlreadyRegisteredException {
-        if (accountDAO.existsByEmail(registrationDTO.getEmail())) {
-            throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email-already-registered"), registrationDTO.getEmail()));
+    public Account register(RegisterDTO registerDTO) throws EmailAlreadyRegisteredException {
+        if (accountDAO.existsByEmail(registerDTO.getEmail())) {
+            throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email-already-registered"), registerDTO.getEmail()));
         }
 
 
-        Account account = accountDAO.save(new Account(registrationDTO));
+        Account account = accountDAO.save(new Account(registerDTO));
         ConfirmationType confirmationType = confirmationTypeDAO.findById(1).get();
         Confirmation confirmationMail = new Confirmation(account, confirmationType);
         confirmationDAO.save(confirmationMail);
@@ -81,11 +80,13 @@ public class AccountService {
                     confirmationMail.setDateConfirmation(new Date());
                     this.confirmationDAO.save(confirmationMail);
 
-                    Set<Role> roles = account.getAccountRoles();
                     Role roleUser = roleDAO.findById("ACCOUNT").get();
-                    roles.add(roleUser);
+                    accountRoleDAO.save(new AccountRole(
+                            account,
+                            roleUser,
+                            true
+                    ));
 
-                    account.setAccountRoles(roles);
                     account.setActive(true);
                     this.accountDAO.save(account);
 
@@ -105,22 +106,21 @@ public class AccountService {
 
 
     public Account getAccountLoggedIn() {
-        AuthenticationAccount authentication = authService.getCurrentAuthentication();
+        AuthenticationAccount authentication = AuthService.getCurrentAuthentication();
         Long idUser = (Long) authentication.getPrincipal();
 
         return accountDAO.findById(idUser).orElse(null);
     }
 
 
-    public Account saveAccount(SaveAccountDTO accountDTO) {
+    public Account put(AccountDTO accountDTO) {
         Account account = this.getAccountLoggedIn();
         account.setAccountFromDTO(accountDTO);
-
         return accountDAO.save(account);
     }
 
 
-    public Account updatePassword(SavePasswordDTO passwordDTO) throws MismatchedPasswordsException, NewPasswordEqualsOldPasswordException {
+    public Account updatePassword(PasswordDTO passwordDTO) throws MismatchedPasswordsException, NewPasswordEqualsOldPasswordException {
         Account account = this.getAccountLoggedIn();
 
         String oldPassword = passwordDTO.getOldPassword();
@@ -142,5 +142,41 @@ public class AccountService {
         throw new NewPasswordEqualsOldPasswordException(messageService.getMessage("tartarus.validations.old-password-equals-new-password"));
 
     }
+
+    public Set<Role> getRoles() {
+        return getAccountLoggedIn().getActiveRoles();
+    }
+
+
+    public void patchRole(String roleId) throws RoleNotFoundException {
+
+        Optional<Role> role = roleDAO.findById(roleId);
+
+        if (role.isPresent()) {
+            Account account = getAccountLoggedIn();
+
+            boolean found = accountRoleDAO.existsById(
+                    new AccountRolePK(
+                            account,
+                            role.get()
+                    )
+            );
+
+
+            if (found) {
+                AuthenticationAccount authenticationAccount = AuthService.getCurrentAuthentication();
+
+                authenticationAccount.setSelectedGranted(
+                        new SimpleGrantedAuthority(roleId)
+                );
+                return;
+            }
+
+        }
+
+        throw new RoleNotFoundException(String.format(messageService.getMessage("tartarus.role.not-found"), roleId));
+
+    }
+
 
 }

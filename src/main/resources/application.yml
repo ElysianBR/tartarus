@@ -6,12 +6,11 @@ spring:
         driver-class-name: org.postgresql.Driver
 
     jpa:
-        database-platform: org.hibernate.dialect.PostgreSQLDialect
         generate-ddl: true
+        open-in-view: false
         properties:
             hibernate:
                 default_schema: tartarus
-                dialect: org.hibernate.dialect.PostgreSQLDialect
 
     messages:
         basename: messages/messages
@@ -21,6 +20,7 @@ spring:
             platform: postgresql
             schema-locations: classpath:sql/schema.sql
             mode: always
+
 
 
 tartatus:
@@ -59,6 +59,7 @@ springdoc:
 
     swagger-ui:
         enabled: true
+        groups-order: asc
         operationsSorter: method
         path: /swagger
 #    show-actuator: false
