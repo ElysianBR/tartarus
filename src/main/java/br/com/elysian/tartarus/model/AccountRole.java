@@ -2,7 +2,9 @@ package br.com.elysian.tartarus.model;
 
 import br.com.elysian.tartarus.model.constraint.UniqueDefaultRole;
 import br.com.elysian.tartarus.model.pk.AccountRolePK;
+import br.com.elysian.tartarus.view.RoleViews;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,7 +24,6 @@ public class AccountRole {
 
     @Id
     @ManyToOne
-    @JsonManagedReference
     private Account account;
 
     @Id

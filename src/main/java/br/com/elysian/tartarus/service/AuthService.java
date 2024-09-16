@@ -2,7 +2,7 @@ package br.com.elysian.tartarus.service;
 
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
 import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
-import br.com.elysian.tartarus.dto.v1.LoginDTO;
+import br.com.elysian.tartarus.dto.v1.post.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.model.Account;

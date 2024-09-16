@@ -1,7 +1,6 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.dto.v1.CompanyDTO;
-import br.com.elysian.tartarus.dto.v1.PutCompanyDTO;
+import br.com.elysian.tartarus.dto.v1.put.CompanyDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.exception.CompanyNotFoundException;
 import br.com.elysian.tartarus.exception.CompanyNotLoggedInException;
@@ -15,8 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Set;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/company")
@@ -44,27 +44,16 @@ public class CompanyController {
 
     @PutMapping()
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<Company> put(@Valid @RequestBody PutCompanyDTO companyDTO) {
+    public ResponseEntity<Company> put(@Valid @RequestBody CompanyDTO companyDTO) {
         return ResponseEntity.ok(
                 companyService.put(companyDTO)
         );
     }
 
 
-//    @PatchMapping()
-//    @PreAuthorize("hasAnyAuthority('BUSINESS_ADMIN')")
-//    public ResponseEntity<CompanyDTO> patch(@Valid @RequestBody SaveCompanyDTO companyDTO) throws CompanyNotLoggedInException {
-//        return ResponseEntity.ok(
-//                new CompanyDTO(
-//                        companyService.update(companyDTO)
-//                )
-//        );
-//    }
-
-
-    @PostMapping("/with")
+    @PatchMapping()
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<TokenDTO> with(@RequestParam("companyId") Long companyId, HttpServletResponse response) throws CompanyNotFoundException, InvalidUsernameOrPasswordException {
+    public ResponseEntity<TokenDTO> patch(@RequestParam("companyId") Long companyId, HttpServletResponse response) throws CompanyNotFoundException, InvalidUsernameOrPasswordException {
         companyService.with(companyId);
 
         TokenDTO token = authService.getAuthorizationByCurrentAuthentication();
@@ -76,17 +65,11 @@ public class CompanyController {
 
     @GetMapping("/companies")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<ArrayList<CompanyDTO>> getCompanies() {
-        Set<Company> companySet = companyService.getCompaniesFromAccount();
+    public ResponseEntity<List<Company>> getCompanies() {
+        return ResponseEntity.ok(
+                companyService.getCompaniesFromAccount()
+        );
 
-        ArrayList<CompanyDTO> companyDTOS = new ArrayList<>();
-        companySet.forEach(company -> {
-            if (company.isActive()) {
-                companyDTOS.add(new CompanyDTO(company));
-            }
-        });
-
-        return ResponseEntity.ok(companyDTOS);
     }
 
 

@@ -3,7 +3,6 @@ package br.com.elysian.tartarus.service.blockchain;
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
 import br.com.elysian.tartarus.config.security.authentication.CredentialAccount;
 import br.com.elysian.tartarus.dto.v1.SuccessDTO;
-import br.com.elysian.tartarus.dto.v1.blockchain.NetworkDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.SavePrivateKeyDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.*;
@@ -64,14 +63,32 @@ public class NetworkService {
     }
 
 
-    public void with(String networkTag) throws NetworkNotFoundException {
-        AuthenticationAccount authenticationAccount = AuthService.getCurrentAuthentication();
+    public void patch(String networkTag) throws NetworkNotFoundException, CompanyNotLoggedInException {
 
-        if (networkDAO.existsByTag(networkTag)) {
-            ((CredentialAccount) authenticationAccount.getCredentials()).setNetworkTag(networkTag);
-        } else {
-            throw new NetworkNotFoundException(String.format(messageService.getMessage("tartarus.blockchain.network.not-found"), networkTag));
+        Optional<Network> network = networkDAO.findByTag(networkTag);
+
+        if (network.isPresent()) {
+
+            Company company = companyService.getCompanyLoggedIn();
+
+            boolean found = companyNetworkDAO.existsById(
+                    new CompanyNetworkPK(
+                            company,
+                            network.get()
+                    )
+            );
+
+
+            if (found) {
+                AuthenticationAccount authenticationAccount = AuthService.getCurrentAuthentication();
+
+                ((CredentialAccount) authenticationAccount.getCredentials()).setNetworkTag(networkTag);
+                return;
+            }
         }
+
+        throw new NetworkNotFoundException(String.format(messageService.getMessage("tartarus.blockchain.network.not-found"), networkTag));
+
     }
 
 
@@ -179,28 +196,19 @@ public class NetworkService {
     }
 
 
-    public ArrayList<NetworkDTO> getAvailableNetworks() {
-        Set<Network> availableNetworks = networkDAO.findByActive(true);
-
-
-        ArrayList<NetworkDTO> networks = new ArrayList<>();
-        for (Network network : availableNetworks) {
-            networks.add(new NetworkDTO(network));
-        }
-
-
-        return networks;
+    public Set<Network> getAvailableNetworks() {
+        return networkDAO.findByActive(true);
     }
 
 
-    public ArrayList<NetworkDTO> getRegisteredNetworks() {
+    public ArrayList<Network> getRegisteredNetworks() {
         Account account = accountService.getAccountLoggedIn();
         Set<CompanyNetworkAccount> companyNetworkAccounts = accountCompanyNetworkDAO.findByAccount(account);
 
 
-        ArrayList<NetworkDTO> networks = new ArrayList<>();
+        ArrayList<Network> networks = new ArrayList<>();
         for (CompanyNetworkAccount network : companyNetworkAccounts) {
-            networks.add(new NetworkDTO(network.getCompanyNetwork().getNetwork()));
+            networks.add(network.getCompanyNetwork().getNetwork());
         }
 
 

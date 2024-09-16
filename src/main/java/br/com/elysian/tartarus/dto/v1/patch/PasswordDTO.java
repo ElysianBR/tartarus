@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.dto.v1;
+package br.com.elysian.tartarus.dto.v1.patch;
 
 
 import jakarta.validation.constraints.NotNull;
@@ -9,7 +9,7 @@ import org.hibernate.validator.constraints.Length;
 
 @Getter
 @AllArgsConstructor
-public class PatchPasswordDTO {
+public class PasswordDTO {
 
     @NotNull
     private String oldPassword;

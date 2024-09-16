@@ -1,10 +1,8 @@
-package br.com.elysian.tartarus.dto.v1;
+package br.com.elysian.tartarus.dto.v1.put;
 
-import br.com.elysian.tartarus.model.Account;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.time.LocalDate;

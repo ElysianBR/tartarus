@@ -1,8 +1,9 @@
 package br.com.elysian.tartarus.model;
 
-import br.com.elysian.tartarus.dto.v1.RegisterDTO;
-import br.com.elysian.tartarus.dto.v1.PutAccountDTO;
+import br.com.elysian.tartarus.dto.v1.post.RegisterDTO;
+import br.com.elysian.tartarus.dto.v1.put.AccountDTO;
 import br.com.elysian.tartarus.utils.PasswordUtils;
+import br.com.elysian.tartarus.view.RoleViews;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -25,6 +26,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(schema = "tartarus", name = "account")
+//@JsonView(RoleViews.AccountView.class)
 public class Account {
 
     @Id
@@ -63,7 +65,7 @@ public class Account {
     private String password;
 
 
-    @JsonBackReference
+    @JsonIgnore
     @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
     private Set<AccountRole> accountRoles;
 
@@ -73,13 +75,9 @@ public class Account {
     private Set<Confirmation> confirmations;
 
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "company_account",
-            joinColumns = @JoinColumn(name = "account_id"),
-            inverseJoinColumns = @JoinColumn(name = "company_id")
-    )
-    private Set<Company> companies;
+    @JsonIgnore
+    @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
+    private Set<CompanyAccount> companies;
 
 
     public boolean isEnable() {
@@ -138,7 +136,7 @@ public class Account {
     }
 
     @JsonIgnore
-    public void setAccountFromDTO(PutAccountDTO accountDTO) {
+    public void setAccountFromDTO(AccountDTO accountDTO) {
         // TODO: Implements set Model from dynamic DTO.
         this.firstName = accountDTO.getFirstName();
         this.lastName = accountDTO.getLastName();

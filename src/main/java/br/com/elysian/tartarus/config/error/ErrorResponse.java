@@ -1,11 +1,14 @@
 package br.com.elysian.tartarus.config.error;
 
+import br.com.elysian.tartarus.view.RoleViews;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
 @Getter
 @Setter
+//@JsonView(RoleViews.AccountView.class)
 public class ErrorResponse {
     private int statusCode;
     private String error;

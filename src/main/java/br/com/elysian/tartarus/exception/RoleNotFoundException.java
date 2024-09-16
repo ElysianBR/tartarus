@@ -1,24 +1,24 @@
 package br.com.elysian.tartarus.exception;
 
 
-public class CompanyNotFoundException extends Exception {
+public class RoleNotFoundException extends Exception {
 
-    public CompanyNotFoundException() {
+    public RoleNotFoundException() {
     }
 
-    public CompanyNotFoundException(String message) {
+    public RoleNotFoundException(String message) {
         super(message);
     }
 
-    public CompanyNotFoundException(String message, Throwable cause) {
+    public RoleNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public CompanyNotFoundException(Throwable cause) {
+    public RoleNotFoundException(Throwable cause) {
         super(cause);
     }
 
-    public CompanyNotFoundException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public RoleNotFoundException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

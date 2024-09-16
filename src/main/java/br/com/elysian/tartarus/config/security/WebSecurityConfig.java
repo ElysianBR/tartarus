@@ -28,7 +28,7 @@ public class WebSecurityConfig {
     @Getter
     private static final String[] NO_AUTH_PATHS = new String[]{
             "/swagger/**", "/swagger-ui/**", "/api-docs/**",
-            "/api/v1/auth/**", "/api/v1/account/create"
+            "/api/v1/auth/**", "/api/v1/account/register"
     };
 
     @Autowired

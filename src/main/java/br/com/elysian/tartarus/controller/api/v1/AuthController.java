@@ -1,6 +1,6 @@
 package br.com.elysian.tartarus.controller.api.v1;
 
-import br.com.elysian.tartarus.dto.v1.LoginDTO;
+import br.com.elysian.tartarus.dto.v1.post.LoginDTO;
 import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.exception.ReCaptchaInvalidException;

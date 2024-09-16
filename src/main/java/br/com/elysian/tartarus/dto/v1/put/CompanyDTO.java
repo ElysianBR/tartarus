@@ -1,4 +1,4 @@
-package br.com.elysian.tartarus.dto.v1;
+package br.com.elysian.tartarus.dto.v1.put;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

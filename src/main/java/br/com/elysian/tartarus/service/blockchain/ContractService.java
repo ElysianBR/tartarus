@@ -1,7 +1,6 @@
 package br.com.elysian.tartarus.service.blockchain;
 
 
-import br.com.elysian.tartarus.dto.v1.blockchain.ContractDeployDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetworkAccount;
 import br.com.elysian.tartarus.model.CompanyNetwork;

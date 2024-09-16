@@ -1,9 +1,8 @@
 package br.com.elysian.tartarus.controller.api.v1.blockchain;
 
 
-import br.com.elysian.tartarus.dto.v1.blockchain.ContractDTO;
-import br.com.elysian.tartarus.dto.v1.blockchain.ContractDeployDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.RequestSpecDTO;
+import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.model.Contract;
 import br.com.elysian.tartarus.service.blockchain.ContractClient;
 import br.com.elysian.tartarus.service.blockchain.ContractService;
@@ -32,45 +31,40 @@ public class BlockchainController {
     }
 
 
-    @PreAuthorize("hasAnyAuthority('BUSINESS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
     @GetMapping("/{module}/{version}/{contractName}")
-    public ResponseEntity<ContractDTO> getContract(@PathVariable String module, @PathVariable String version, @PathVariable String contractName) throws Exception {
+    public ResponseEntity<CompanyNetworkContract> getContract(@PathVariable String module, @PathVariable String version, @PathVariable String contractName) throws Exception {
         return ResponseEntity.ok(
-                new ContractDTO(
-                        contractService.getNetworkContract(contractName, version).getPk().getContract()
-                )
+                contractService.getNetworkContract(contractName, version)
+
         );
     }
 
 
-    @PreAuthorize("hasAnyAuthority('BUSINESS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
     @GetMapping("/{module}/{version}/{contractName}/metadata")
-    public ResponseEntity<ContractDTO> getMetadata(@PathVariable String module, @PathVariable String version, @PathVariable String contractName) throws Exception {
+    public ResponseEntity<Contract> getMetadata(@PathVariable String module, @PathVariable String version, @PathVariable String contractName) throws Exception {
         return ResponseEntity.ok(
-                new ContractDTO(
-                        contractService.getContract(contractName, version)
-                )
+                contractService.getContract(contractName, version)
         );
     }
 
 
     @Async
     @Transactional
-    @PreAuthorize("hasAnyAuthority('BUSINESS_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
     @PostMapping("/{module}/{version}/{contractName}/deploy")
-    public CompletableFuture<ResponseEntity<ContractDeployDTO>> deploy(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @RequestBody RequestSpecDTO requestSpecDTO) throws Exception {
+    public CompletableFuture<ResponseEntity<CompanyNetworkContract>> deploy(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @RequestBody RequestSpecDTO requestSpecDTO) throws Exception {
         ContractClient client = contractService.getContractClient(requestSpecDTO.getPassword());
         Contract contract = contractService.getContract(contractName, version);
 
         return CompletableFuture.completedFuture(
                 ResponseEntity.ok(
-                        new ContractDeployDTO(
-                                contractService.saveDeployInDB(
-                                        client.deploy(contract, requestSpecDTO)
-                                                .sendAsync()
-                                                .get(),
-                                        contractName, version
-                                )
+                        contractService.saveDeployInDB(
+                                client.deploy(contract, requestSpecDTO)
+                                        .sendAsync()
+                                        .get(),
+                                contractName, version
                         )
                 )
         );

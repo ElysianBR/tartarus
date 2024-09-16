@@ -2,13 +2,16 @@ package br.com.elysian.tartarus.service;
 
 import br.com.elysian.tartarus.config.security.authentication.AuthenticationAccount;
 import br.com.elysian.tartarus.dto.v1.*;
-import br.com.elysian.tartarus.exception.EmailAlreadyRegisteredException;
-import br.com.elysian.tartarus.exception.MismatchedPasswordsException;
-import br.com.elysian.tartarus.exception.NewPasswordEqualsOldPasswordException;
+import br.com.elysian.tartarus.dto.v1.patch.PasswordDTO;
+import br.com.elysian.tartarus.dto.v1.post.RegisterDTO;
+import br.com.elysian.tartarus.dto.v1.put.AccountDTO;
+import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.*;
+import br.com.elysian.tartarus.model.pk.AccountRolePK;
 import br.com.elysian.tartarus.repository.*;
 import br.com.elysian.tartarus.utils.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -110,14 +113,14 @@ public class AccountService {
     }
 
 
-    public Account put(PutAccountDTO accountDTO) {
+    public Account put(AccountDTO accountDTO) {
         Account account = this.getAccountLoggedIn();
         account.setAccountFromDTO(accountDTO);
         return accountDAO.save(account);
     }
 
 
-    public Account updatePassword(PatchPasswordDTO passwordDTO) throws MismatchedPasswordsException, NewPasswordEqualsOldPasswordException {
+    public Account updatePassword(PasswordDTO passwordDTO) throws MismatchedPasswordsException, NewPasswordEqualsOldPasswordException {
         Account account = this.getAccountLoggedIn();
 
         String oldPassword = passwordDTO.getOldPassword();
@@ -139,5 +142,41 @@ public class AccountService {
         throw new NewPasswordEqualsOldPasswordException(messageService.getMessage("tartarus.validations.old-password-equals-new-password"));
 
     }
+
+    public Set<Role> getRoles() {
+        return getAccountLoggedIn().getActiveRoles();
+    }
+
+
+    public void patchRole(String roleId) throws RoleNotFoundException {
+
+        Optional<Role> role = roleDAO.findById(roleId);
+
+        if (role.isPresent()) {
+            Account account = getAccountLoggedIn();
+
+            boolean found = accountRoleDAO.existsById(
+                    new AccountRolePK(
+                            account,
+                            role.get()
+                    )
+            );
+
+
+            if (found) {
+                AuthenticationAccount authenticationAccount = AuthService.getCurrentAuthentication();
+
+                authenticationAccount.setSelectedGranted(
+                        new SimpleGrantedAuthority(roleId)
+                );
+                return;
+            }
+
+        }
+
+        throw new RoleNotFoundException(String.format(messageService.getMessage("tartarus.role.not-found"), roleId));
+
+    }
+
 
 }

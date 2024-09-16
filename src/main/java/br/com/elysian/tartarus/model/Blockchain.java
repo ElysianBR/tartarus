@@ -1,5 +1,7 @@
 package br.com.elysian.tartarus.model;
 
+import br.com.elysian.tartarus.view.RoleViews;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,6 +38,7 @@ public class Blockchain {
     private String description;
 
     @Column(name = "infura_key")
+//    @JsonView(RoleViews.AdminView.class)
     private String infuraKey;
 
 }

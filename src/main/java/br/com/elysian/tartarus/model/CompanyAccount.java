@@ -1,6 +1,11 @@
 package br.com.elysian.tartarus.model;
 
+import br.com.elysian.tartarus.model.pk.CompanyAccountPK;
 import br.com.elysian.tartarus.model.pk.CompanyNetworkPK;
+import br.com.elysian.tartarus.view.RoleViews;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,9 +19,9 @@ import java.math.BigInteger;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@IdClass(CompanyNetworkPK.class)
-@Table(schema = "tartarus", name = "company_network")
-public class CompanyNetwork {
+@IdClass(CompanyAccountPK.class)
+@Table(schema = "tartarus", name = "company_account")
+public class CompanyAccount {
 
     @Id
     @ManyToOne
@@ -24,13 +29,9 @@ public class CompanyNetwork {
     private Company company;
 
     @Id
-    @OneToOne
-    @JoinColumn(name = "blockchain_id")
-    private Network network;
-
-
-    @Column(name = "max_gas_wei", nullable = false)
-    private BigInteger maxGasWei = BigInteger.ZERO;
+    @ManyToOne
+    @JoinColumn(name = "account_id")
+    private Account account;
 
 
 }

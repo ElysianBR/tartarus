@@ -5,6 +5,7 @@ import br.com.elysian.tartarus.dto.v1.TokenDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.*;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.CompanyNetwork;
+import br.com.elysian.tartarus.model.Network;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
 
@@ -21,6 +22,7 @@ import javax.crypto.NoSuchPaddingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/blockchain/network")
@@ -38,36 +40,37 @@ public class NetworkController {
 
     @GetMapping()
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<NetworkDTO> getNetwork() throws CompanyNotLoggedInException, NetworkNotLoggedInException, NetworkNotFoundException {
-        CompanyNetwork companyNetwork = networkService.getCompanyNetworkLoggedIn();
-
+    public ResponseEntity<Network> getNetwork() throws CompanyNotLoggedInException, NetworkNotLoggedInException, NetworkNotFoundException {
         return ResponseEntity.ok(
-                new NetworkDTO(companyNetwork.getNetwork())
+                networkService
+                        .getCompanyNetworkLoggedIn()
+                        .getNetwork()
         );
     }
 
 
     @GetMapping("/registered-networks")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<ArrayList<NetworkDTO>> getRegisteredNetworks() {
-        ArrayList<NetworkDTO> networks = networkService.getRegisteredNetworks();
-        return ResponseEntity.ok(networks);
+    public ResponseEntity<ArrayList<Network>> getRegisteredNetworks() {
+        return ResponseEntity.ok(
+                networkService.getRegisteredNetworks()
+        );
     }
 
 
     @GetMapping("/available-networks")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<ArrayList<NetworkDTO>> getAvailableNetworks() {
-        ArrayList<NetworkDTO> networks = networkService.getAvailableNetworks();
-        return ResponseEntity.ok(networks);
+    public ResponseEntity<Set<Network>> getAvailableNetworks() {
+        return ResponseEntity.ok(
+                networkService.getAvailableNetworks()
+        );
     }
 
 
-    @PostMapping("/with")
+    @PatchMapping()
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<TokenDTO> networkWith(@RequestParam("tag") String networkTag, HttpServletResponse response) throws NetworkNotFoundException, InvalidUsernameOrPasswordException {
-        // TODO: Implementation for validation if account is registered in network selected!!
-        networkService.with(networkTag);
+    public ResponseEntity<TokenDTO> networkWith(@RequestParam("tag") String networkTag, HttpServletResponse response) throws NetworkNotFoundException, InvalidUsernameOrPasswordException, CompanyNotLoggedInException {
+        networkService.patch(networkTag);
 
         TokenDTO token = authService.getAuthorizationByCurrentAuthentication();
         authService.setHeaders(token, response);

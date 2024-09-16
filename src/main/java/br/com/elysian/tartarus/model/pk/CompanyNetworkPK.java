@@ -5,7 +5,6 @@ import br.com.elysian.tartarus.model.Network;
 import lombok.*;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 @Getter
 @Setter
