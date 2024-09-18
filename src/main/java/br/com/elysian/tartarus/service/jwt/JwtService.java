@@ -24,24 +24,28 @@ public class JwtService {
     private long EXPIRATION_TIME;
 
 
-    private JWTCreator.Builder build(Account account) {
+    private JWTCreator.Builder build(Long accountId) {
         return JWT.create()
-                .withSubject(account.getEmail())
-                .withClaim("password", account.getPassword())
+                .withSubject(String.valueOf(accountId))
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME));
     }
 
-    public JwtBuilder getBuilder(Account account) {
-        return new JwtBuilder(this.build(account));
+    public JwtBuilder getBuilder(Long accountId) {
+        return new JwtBuilder(this.build(accountId));
     }
 
-    public String sign(JwtBuilder builder){
+    public JwtBuilder getBuilder(Account account) {
+        return new JwtBuilder(this.build(account.getId()));
+    }
+
+    public String sign(JwtBuilder builder) {
         return builder.getBuilder().sign(Algorithm.HMAC512(secret.getBytes()));
     }
 
 
     public DecodedJWT getDecodedJWT(String token) {
-        return JWT.require(Algorithm.HMAC512(secret.getBytes()))
+        return JWT
+                .require(Algorithm.HMAC512(secret.getBytes()))
                 .build()
                 .verify(token);
     }
