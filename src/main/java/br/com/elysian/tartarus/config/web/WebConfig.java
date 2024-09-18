@@ -16,7 +16,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         // Allow Cors to localhost (Web application React)
         registry.addMapping("/**")
-                .allowedOrigins("https://elysian.com.br/")
+                .allowedOrigins("https://elysian.com.br/", "http://localhost:3000")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
                 .allowCredentials(true);
     }

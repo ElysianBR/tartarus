@@ -49,10 +49,7 @@ public class AuthService {
     @Getter
     private static final String HEADER_STRING = "Authorization";
     @Getter
-    private static final String HEADER_EXPIRES_STRING = "X-Expires";
-
-    private String jwtToken;
-
+    private static final String HEADER_EXPIRES_STRING = "Expires";
 
     @Autowired
     private AuthService(MessageService messageService, AccountDAO accountDAO, AccountRoleDAO accountRoleDAO, JwtService jwtUtil) {
@@ -74,55 +71,45 @@ public class AuthService {
         try {
             DecodedJWT decodedJWT = jwtService.getDecodedJWT(jwtToken);
 
-            String email = decodedJWT.getSubject();
-            String password = decodedJWT.getClaim("password").asString();
+            Long accountId = Long.valueOf(decodedJWT.getSubject());
 
-            if (email != null && password != null) {
-                Optional<Account> accountOpt = accountDAO.findByEmail(email);
+            Optional<Account> accountOpt = accountDAO.findById(accountId);
 
-                if (accountOpt.isPresent()) {
+            if (accountOpt.isPresent()) {
+                Account account = accountOpt.get();
 
-                    Account account = accountOpt.get();
+                ArrayList<GrantedAuthority> grantedAuthorities = new ArrayList<>();
 
-                    String passwordAccount = account.getPassword();
-
-                    if (passwordAccount.equals(password)) {
-
-                        ArrayList<GrantedAuthority> grantedAuthorities = new ArrayList<>();
-
-                        for (Role role : account.getActiveRoles()) {
-                            if (role.isActive()) {
-                                grantedAuthorities.add(new SimpleGrantedAuthority(role.getId()));
-                            }
-                        }
-
-                        GrantedAuthority selectedGranted = null;
-                        if (getDefaultRole(account) != null) {
-                            selectedGranted = new SimpleGrantedAuthority(getDefaultRole(account).getId());
-                        }
-
-
-                        CredentialAccount credential = new CredentialAccount(
-                                account
-                        );
-
-
-                        Map<String, Claim> claims = decodedJWT.getClaims();
-                        credential.setClaims(claims);
-
-
-                        AuthenticationAccount authAccount = new AuthenticationAccount(
-                                account.getId(),
-                                credential,
-                                grantedAuthorities
-                        );
-
-                        authAccount.setSelectedGranted(selectedGranted);
-
-                        return authAccount;
-
+                for (Role role : account.getActiveRoles()) {
+                    if (role.isActive()) {
+                        grantedAuthorities.add(new SimpleGrantedAuthority(role.getId()));
                     }
                 }
+
+                GrantedAuthority selectedGranted = null;
+                if (getDefaultRole(account) != null) {
+                    selectedGranted = new SimpleGrantedAuthority(getDefaultRole(account).getId());
+                }
+
+
+                CredentialAccount credential = new CredentialAccount(
+                        account
+                );
+
+
+                Map<String, Claim> claims = decodedJWT.getClaims();
+                credential.setClaims(claims);
+
+
+                AuthenticationAccount authAccount = new AuthenticationAccount(
+                        account.getId(),
+                        credential,
+                        grantedAuthorities
+                );
+
+                authAccount.setSelectedGranted(selectedGranted);
+
+                return authAccount;
             }
 
         } catch (Exception e) {
@@ -178,41 +165,47 @@ public class AuthService {
     }
 
 
-    public TokenDTO getAuthorization(Account account) throws InvalidUsernameOrPasswordException {
-        JwtBuilder builder = jwtService.getBuilder(account);
-        this.jwtToken = jwtService.sign(builder);
-
+    private TokenDTO getTokenDTO(String jwtToken) {
         DecodedJWT jwt = jwtService.getDecodedJWT(jwtToken);
-        return new TokenDTO(jwt.getExpiresAt(), jwt.getToken());
+        return new TokenDTO(jwt.getExpiresAt(), jwtToken);
+    }
+
+    public TokenDTO getAuthorization(Account account) throws InvalidUsernameOrPasswordException {
+        return this.getTokenDTO(
+                jwtService.sign(
+                        jwtService.getBuilder(account)
+                )
+        );
     }
 
 
-    public TokenDTO getAuthorizationByCurrentAuthentication() throws InvalidUsernameOrPasswordException {
+    public TokenDTO getAuthorization(Long accountId) throws InvalidUsernameOrPasswordException {
+        return this.getTokenDTO(
+                jwtService.sign(
+                        jwtService.getBuilder(accountId)
+                )
+        );
+    }
+
+
+    public TokenDTO getAuthorizationByCurrentAuthentication() {
         AuthenticationAccount auth = AuthService.getCurrentAuthentication();
 
         Long idUser = (Long) auth.getPrincipal();
 
-        Optional<Account> accountOpt = accountDAO.findById(idUser);
+        JwtBuilder builder = jwtService.getBuilder(idUser);
+        CredentialAccount credential = (CredentialAccount) auth.getCredentials();
 
-        if (accountOpt.isPresent()) {
-            Account account = accountOpt.get();
+        builder.addCredentialsAsClaim(credential);
 
-            JwtBuilder builder = jwtService.getBuilder(account);
-            CredentialAccount credential = (CredentialAccount) auth.getCredentials();
-
-            builder.addCredentialsAsClaim(credential);
-
-            this.jwtToken = jwtService.sign(builder);
-
-            DecodedJWT jwt = jwtService.getDecodedJWT(jwtToken);
-            return new TokenDTO(jwt.getExpiresAt(), jwt.getToken());
-        }
-
-        throw new AuthenticationServiceException("This authentication is not belonging to a valid account.");
+        return this.getTokenDTO(
+                jwtService.sign(builder)
+        );
     }
 
 
     public void setHeaders(TokenDTO jwtToken, HttpServletResponse response) {
+        response.setHeader("Access-Control-Expose-Headers", HEADER_STRING);
         response.addHeader(HEADER_STRING, String.format("%s %s", TOKEN_PREFIX, jwtToken.getToken()));
         response.addHeader(HEADER_EXPIRES_STRING, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(jwtToken.getExpiresIn()));
     }

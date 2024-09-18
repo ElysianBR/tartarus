@@ -25,12 +25,6 @@ public class JwtBuilder {
 
     private final JWTCreator.Builder builder;
 
-    @Setter
-    private Long companyId;
-
-    @Setter
-    private String blochchainTag;
-
     public JwtBuilder(JWTCreator.Builder builder) {
         this.builder = builder;
     }
