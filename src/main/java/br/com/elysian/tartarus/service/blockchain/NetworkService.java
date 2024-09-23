@@ -149,7 +149,7 @@ public class NetworkService {
 
             String hashedPrivateKey = companyNetworkAccount.getPrivateKey();
 
-            if (hashedPrivateKey != null) {
+            if (hashedPrivateKey != null && !hashedPrivateKey.isEmpty()) {
 
                 try {
                     SecretKeySpec secret = BlockchainUtils.getKeyFromPassword(password);
@@ -160,9 +160,7 @@ public class NetworkService {
 
             } else {
                 throw new PrivateKeyNotSet(messageService.getMessage("tartarus.blockchain.network.private-key-not-set"));
-
             }
-
 
         }
 

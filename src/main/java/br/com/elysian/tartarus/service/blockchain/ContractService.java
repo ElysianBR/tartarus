@@ -10,7 +10,6 @@ import br.com.elysian.tartarus.model.pk.CompanyNetworkContractPK;
 import br.com.elysian.tartarus.model.pk.ContractPK;
 import br.com.elysian.tartarus.repository.CompanyNetworkContractDAO;
 import br.com.elysian.tartarus.repository.ContractDAO;
-import br.com.elysian.tartarus.repository.NetworkContractDAO;
 import br.com.elysian.tartarus.service.MessageService;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,18 +40,15 @@ public class ContractService {
 
     private final ContractDAO contractDAO;
     private final CompanyNetworkContractDAO companyNetworkContractDAO;
-    private final NetworkContractDAO networkContractDAO;
 
 
     @Autowired
     public ContractService(MessageService messageService, NetworkService networkService,
-                           ContractDAO contractDAO, CompanyNetworkContractDAO companyNetworkContractDAO,
-                           NetworkContractDAO networkContractDAO) {
+                           ContractDAO contractDAO, CompanyNetworkContractDAO companyNetworkContractDAO) {
         this.messageService = messageService;
         this.networkService = networkService;
         this.contractDAO = contractDAO;
         this.companyNetworkContractDAO = companyNetworkContractDAO;
-        this.networkContractDAO = networkContractDAO;
     }
 
 
@@ -74,7 +70,7 @@ public class ContractService {
 
         CompanyNetworkContractPK companyNetworkContractPK = new CompanyNetworkContractPK(companyNetwork, contract);
 
-        Optional<CompanyNetworkContract> companyNetworkContract = networkContractDAO.findById(companyNetworkContractPK);
+        Optional<CompanyNetworkContract> companyNetworkContract = companyNetworkContractDAO.findById(companyNetworkContractPK);
         if (companyNetworkContract.isPresent()) {
             return companyNetworkContract.get();
         }

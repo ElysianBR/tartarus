@@ -1,11 +1,16 @@
 package br.com.elysian.tartarus.controller.api.v1.blockchain;
 
 
+import br.com.elysian.tartarus.dto.v1.blockchain.ExecuteFuncDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.RequestSpecDTO;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.model.Contract;
+import br.com.elysian.tartarus.service.blockchain.AbstractContract;
 import br.com.elysian.tartarus.service.blockchain.ContractClient;
 import br.com.elysian.tartarus.service.blockchain.ContractService;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -13,6 +18,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -31,6 +38,8 @@ public class BlockchainController {
     }
 
 
+    @Operation
+    @JsonIgnoreProperties( value = {"bin", "abi"})
     @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
     @GetMapping("/{module}/{version}/{contractName}")
     public ResponseEntity<CompanyNetworkContract> getContract(@PathVariable String module, @PathVariable String version, @PathVariable String contractName) throws Exception {
@@ -41,6 +50,7 @@ public class BlockchainController {
     }
 
 
+    @Operation
     @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
     @GetMapping("/{module}/{version}/{contractName}/metadata")
     public ResponseEntity<Contract> getMetadata(@PathVariable String module, @PathVariable String version, @PathVariable String contractName) throws Exception {
@@ -50,6 +60,7 @@ public class BlockchainController {
     }
 
 
+    @Operation
     @Async
     @Transactional
     @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
@@ -66,6 +77,30 @@ public class BlockchainController {
                                         .get(),
                                 contractName, version
                         )
+                )
+        );
+    }
+
+
+    @Operation
+    @Async
+    @Transactional
+    @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
+    @PostMapping("/{module}/{version}/{contractName}/{functionName}/transact")
+    public CompletableFuture<ResponseEntity<TransactionReceipt>> transact(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @PathVariable String functionName, @RequestBody ExecuteFuncDTO executeFuncDTO) throws Exception {
+        ContractClient client = contractService.getContractClient(executeFuncDTO.getPassword());
+        CompanyNetworkContract contract = contractService.getNetworkContract(contractName, version);
+        AbstractContract abstractContract = client.loadContract(contract);
+        Function fun = abstractContract.buildFunction(functionName, executeFuncDTO.getParameters());
+
+        return CompletableFuture.completedFuture(
+                ResponseEntity.ok(
+                        abstractContract
+                                .executeFunction(
+                                        fun,
+                                        abstractContract.estimateFunctionGas(fun, executeFuncDTO)
+                                ).sendAsync()
+                                .get()
                 )
         );
     }
