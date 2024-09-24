@@ -30,10 +30,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class AuthService {
@@ -72,6 +69,7 @@ public class AuthService {
             DecodedJWT decodedJWT = jwtService.getDecodedJWT(jwtToken);
 
             Long accountId = Long.valueOf(decodedJWT.getSubject());
+            Date expiresAt = decodedJWT.getExpiresAt();
 
             Optional<Account> accountOpt = accountDAO.findById(accountId);
 
@@ -108,6 +106,7 @@ public class AuthService {
                 );
 
                 authAccount.setSelectedGranted(selectedGranted);
+                authAccount.setExpiresAt(expiresAt);
 
                 return authAccount;
             }
@@ -148,8 +147,13 @@ public class AuthService {
         return authorization.replace(TOKEN_PREFIX, "");
     }
 
+    private TokenDTO getTokenDTO(String jwtToken) {
+        DecodedJWT jwt = jwtService.getDecodedJWT(jwtToken);
+        return new TokenDTO(jwt.getExpiresAt(), jwtToken);
+    }
 
-    public TokenDTO getAuthorization(LoginDTO auth) throws InvalidUsernameOrPasswordException {
+
+    public TokenDTO getAuthorization(LoginDTO auth, boolean longLivedToken) throws InvalidUsernameOrPasswordException {
         Optional<Account> accountOpt = accountDAO.findByEmail(auth.getEmail());
 
         if (accountOpt.isPresent()) {
@@ -157,34 +161,52 @@ public class AuthService {
             Account account = accountOpt.get();
 
             if (PasswordUtils.verifyPassword(auth.getPassword(), account.getPassword())) {
-                return this.getAuthorization(account);
+                return this.getAuthorization(account, longLivedToken);
             }
         }
 
         throw new InvalidUsernameOrPasswordException(String.format(messageService.getMessage("tartarus.validations.email-password-not-valid"), auth.getEmail()));
     }
 
+    public TokenDTO getAuthorization(LoginDTO auth) throws InvalidUsernameOrPasswordException {
+        return this.getAuthorization(auth, false);
+    }
 
-    private TokenDTO getTokenDTO(String jwtToken) {
-        DecodedJWT jwt = jwtService.getDecodedJWT(jwtToken);
-        return new TokenDTO(jwt.getExpiresAt(), jwtToken);
+
+    public TokenDTO getAuthorization(Account account, boolean longLivedToken) throws InvalidUsernameOrPasswordException {
+        return this.getTokenDTO(
+                jwtService.sign(
+                        jwtService.getBuilder(
+                                account,
+                                longLivedToken ?
+                                        JwtService.ExpirationType.LONG_EXPIRATION :
+                                        JwtService.ExpirationType.SIMPLE_EXPIRATION
+                        )
+                )
+        );
     }
 
     public TokenDTO getAuthorization(Account account) throws InvalidUsernameOrPasswordException {
+        return this.getAuthorization(account, false);
+    }
+
+
+    public TokenDTO getAuthorization(Long accountId, boolean longLivedToken) throws InvalidUsernameOrPasswordException {
         return this.getTokenDTO(
                 jwtService.sign(
-                        jwtService.getBuilder(account)
+                        jwtService.getBuilder(
+                                accountId,
+                                longLivedToken ?
+                                        JwtService.ExpirationType.LONG_EXPIRATION :
+                                        JwtService.ExpirationType.SIMPLE_EXPIRATION
+                        )
                 )
         );
     }
 
 
     public TokenDTO getAuthorization(Long accountId) throws InvalidUsernameOrPasswordException {
-        return this.getTokenDTO(
-                jwtService.sign(
-                        jwtService.getBuilder(accountId)
-                )
-        );
+        return this.getAuthorization(accountId, false);
     }
 
 
@@ -192,8 +214,9 @@ public class AuthService {
         AuthenticationAccount auth = AuthService.getCurrentAuthentication();
 
         Long idUser = (Long) auth.getPrincipal();
+        Date expiresAt = auth.getExpiresAt();
 
-        JwtBuilder builder = jwtService.getBuilder(idUser);
+        JwtBuilder builder = jwtService.getBuilder(idUser, expiresAt);
         CredentialAccount credential = (CredentialAccount) auth.getCredentials();
 
         builder.addCredentialsAsClaim(credential);

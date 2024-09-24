@@ -16,6 +16,7 @@ import java.util.Date;
 public class AuthenticationAccount extends UsernamePasswordAuthenticationToken {
 
     private GrantedAuthority selectedGranted;
+    private Date expiresAt;
 
     public AuthenticationAccount(Object principal, CredentialAccount credentials) {
         super(principal, credentials);

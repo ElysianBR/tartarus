@@ -26,7 +26,8 @@ spring:
 tartatus:
     jwt:
         secret: KC7M1U0fqf8gMb7w53lna8LUr5rd
-        expiration-time: 14400000  #4 hours
+        expiration-time: 86400000  #24 hours
+        long-lived-expiration-time: 2592000000 #30 dias
 
 
 google:

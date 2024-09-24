@@ -13,10 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -37,13 +34,18 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenDTO> login(@Valid @RequestBody LoginDTO auth, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaUnavailableException, ReCaptchaInvalidException, InvalidUsernameOrPasswordException {
+    public ResponseEntity<TokenDTO> login(
+            @RequestParam("longLivedToken") boolean longLivedToken,
+            @Valid @RequestBody LoginDTO auth,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ReCaptchaUnavailableException, ReCaptchaInvalidException, InvalidUsernameOrPasswordException {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);
         }
 
-        TokenDTO token = authService.getAuthorization(auth);
+        TokenDTO token = authService.getAuthorization(auth, longLivedToken);
         authService.setHeaders(token, response);
         return ResponseEntity.ok(token);
     }
