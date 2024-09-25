@@ -3,13 +3,14 @@ package br.com.elysian.tartarus.repository;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @NoRepositoryBean
 public interface CRUDRepository<T, ID> extends Repository<T, ID> {
 
     <S extends T> S save(S entity);
+
+//    <S extends T> void merge(S entity);
 
     <S extends T> Iterable<S> saveAll(Iterable<S> entities);
 

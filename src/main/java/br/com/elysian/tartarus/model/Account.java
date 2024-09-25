@@ -85,6 +85,10 @@ public class Account {
     private String password;
 
 
+    @Column(name = "enable")
+    private boolean enable = false;
+
+
     @JsonIgnore
     @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
     private Set<AccountRole> accountRoles;
@@ -98,27 +102,6 @@ public class Account {
     @JsonIgnore
     @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
     private Set<CompanyAccount> companies;
-
-
-    public boolean isEnable() {
-        if (this.id == 0) {
-            return true;
-        }
-
-        Optional<Confirmation> confirmation = this.getEnableConfirmation();
-        return confirmation.filter(value -> value.getDateConfirmation() != null).isPresent();
-    }
-
-
-    @JsonIgnore
-    public Optional<Confirmation> getEnableConfirmation() {
-        for (Confirmation confirmation : confirmations) {
-            if (confirmation.getType().getId() == 1) {
-                return Optional.of(confirmation);
-            }
-        }
-        return Optional.empty();
-    }
 
 
     @JsonIgnore
