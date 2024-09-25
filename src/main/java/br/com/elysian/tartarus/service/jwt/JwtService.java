@@ -11,6 +11,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @ConfigurationProperties(prefix = "tartatus.jwt")
@@ -23,11 +26,40 @@ public class JwtService {
     @Value("${tartatus.jwt.expiration-time}")
     private long EXPIRATION_TIME;
 
+    @Getter
+    @Value("${tartatus.jwt.long-lived-expiration-time}")
+    private long EXPIRATION_TIME_LONG_LIVED;
 
-    private JWTCreator.Builder build(Long accountId) {
+
+    private JWTCreator.Builder build(Long accountId, boolean longLivedToken) {
+        System.out.println("EXPIRATION_TIME: " + EXPIRATION_TIME);
         return JWT.create()
                 .withSubject(String.valueOf(accountId))
-                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME));
+                .withExpiresAt(
+                        new Date(
+                                System.currentTimeMillis() +
+                                        (longLivedToken ? EXPIRATION_TIME_LONG_LIVED : EXPIRATION_TIME)
+                        )
+                );
+    }
+
+
+    private JWTCreator.Builder build(Long accountId, Date expiresAt) {
+        return JWT.create()
+                .withSubject(String.valueOf(accountId))
+                .withExpiresAt(expiresAt);
+    }
+
+    private JWTCreator.Builder build(Long accountId) {
+        return this.build(accountId, false);
+    }
+
+    public JwtBuilder getBuilder(Long accountId, boolean longLivedToken) {
+        return new JwtBuilder(this.build(accountId, longLivedToken));
+    }
+
+    public JwtBuilder getBuilder(Account account, boolean longLivedToken) {
+        return new JwtBuilder(this.build(account.getId(), longLivedToken));
     }
 
     public JwtBuilder getBuilder(Long accountId) {
@@ -36,6 +68,14 @@ public class JwtService {
 
     public JwtBuilder getBuilder(Account account) {
         return new JwtBuilder(this.build(account.getId()));
+    }
+
+    public JwtBuilder getBuilder(Long accountId, Date expiresAt) {
+        return new JwtBuilder(this.build(accountId, expiresAt));
+    }
+
+    public JwtBuilder getBuilder(Account account, Date expiresAt) {
+        return new JwtBuilder(this.build(account.getId(), expiresAt));
     }
 
     public String sign(JwtBuilder builder) {

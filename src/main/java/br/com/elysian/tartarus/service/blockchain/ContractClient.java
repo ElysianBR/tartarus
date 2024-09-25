@@ -18,11 +18,8 @@ import org.web3j.utils.Convert;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.concurrent.CompletableFuture;
 
 public class ContractClient {
-
-    private static final BigInteger DEFAULT_MAX_PRIORITY_FEE_PER_GAS = Convert.toWei("1.5", Convert.Unit.GWEI).toBigInteger(); // 2 Gwei
 
     private final MessageService messageService;
 
@@ -41,78 +38,6 @@ public class ContractClient {
     }
 
 
-    private AbstractContract loadContract(CompanyNetworkContract contract, ContractGasProvider gasProvider) throws ContractLoadFailed {
-        try {
-            String contractAddress = contract.getContractAddress();
-            String binary = contract.getPk().getContract().getBin();
-
-            return new AbstractContract(binary, contractAddress, web3j, transactionManager, gasProvider);
-
-        } catch (Exception e) {
-
-            throw new ContractLoadFailed(messageService.getMessage("tartarus.blockchain.ethereum.unable.create.contract.instance"), e);
-
-        }
-    }
-
-    public AbstractContract loadContract(CompanyNetworkContract contract) throws ContractLoadFailed {
-        return this.loadContract(contract, new DefaultGasProvider());
-    }
-
-
-    public StaticEIP1559GasProvider getEIP1559GasProvider(BigInteger maxFeePerGas, BigInteger maxPriorityFeePerGas, BigInteger estimateGas) throws IOException {
-        long chainId = web3j.ethChainId().send().getChainId().longValue();
-        return new StaticEIP1559GasProvider(chainId, maxFeePerGas, maxPriorityFeePerGas, estimateGas);
-    }
-
-
-    public StaticEIP1559GasProvider getEIP1559GasProvider(BigInteger maxFeePerGas, BigInteger estimateGas) throws IOException {
-        return this.getEIP1559GasProvider(maxFeePerGas, DEFAULT_MAX_PRIORITY_FEE_PER_GAS, estimateGas);
-    }
-
-
-    public StaticEIP1559GasProvider getDeployGasProvider(String binary) throws IOException {
-        String fromAddress = transactionManager.getFromAddress();
-        BigInteger baseFee = BlockchainUtils.getGasPrice(web3j);
-        BigInteger maxFeePerGas = baseFee.add(DEFAULT_MAX_PRIORITY_FEE_PER_GAS);
-        BigInteger estimateGas = BlockchainUtils.getEstimatedGasPriceToDeploy(web3j, baseFee, fromAddress, binary);
-        return getEIP1559GasProvider(maxFeePerGas, estimateGas);
-    }
-
-
-    public StaticEIP1559GasProvider getDeployGasProvider(String binary, RequestSpecDTO specDTO) throws IOException {
-        if (specDTO.getGasPriceWei() != null || specDTO.getMaxPriorityFeePerGasGwei() != null || specDTO.getGasLimitWei() != null) {
-            BigInteger baseFee;
-            BigInteger maxPriorityFeePerGas;
-            BigInteger gasLimit;
-
-            if (specDTO.getGasPriceWei() != null) {
-                baseFee = specDTO.getGasPriceWei();
-            } else {
-                baseFee = BlockchainUtils.getBaseFee(web3j);
-            }
-
-            if (specDTO.getMaxPriorityFeePerGasGwei() != null) {
-                maxPriorityFeePerGas = specDTO.getMaxPriorityFeePerGasGwei();
-            } else {
-                maxPriorityFeePerGas = DEFAULT_MAX_PRIORITY_FEE_PER_GAS;
-            }
-
-            if (specDTO.getGasLimitWei() != null) {
-                gasLimit = specDTO.getGasLimitWei();
-            } else {
-                String fromAddress = transactionManager.getFromAddress();
-                gasLimit = BlockchainUtils.getEstimatedGasPriceToDeploy(web3j, baseFee, fromAddress, binary);
-            }
-
-            BigInteger maxFeePerGas = baseFee.add(maxPriorityFeePerGas);
-
-            return getEIP1559GasProvider(maxFeePerGas, maxPriorityFeePerGas, gasLimit);
-        }
-        return getDeployGasProvider(binary);
-    }
-
-
     public <T extends Contract> RemoteCall<T> deploy(br.com.elysian.tartarus.model.Contract contract, Class<T> clazz, ContractGasProvider gasProvider) throws Exception {
         String binary = contract.getBin();
         return Contract.deployRemoteCall(
@@ -122,13 +47,13 @@ public class ContractClient {
 
     public <T extends Contract> RemoteCall<T> deploy(br.com.elysian.tartarus.model.Contract contract, Class<T> clazz) throws Exception {
         String binary = contract.getBin();
-        ContractGasProvider gasProvider = getDeployGasProvider(binary);
+        ContractGasProvider gasProvider = BlockchainUtils.getGasProvider(web3j, transactionManager, binary);
         return this.deploy(contract, clazz, gasProvider);
     }
 
     public <T extends Contract> RemoteCall<T> deploy(br.com.elysian.tartarus.model.Contract contract, Class<T> clazz, RequestSpecDTO specDTO) throws Exception {
         String binary = contract.getBin();
-        ContractGasProvider gasProvider = getDeployGasProvider(binary, specDTO);
+        ContractGasProvider gasProvider = BlockchainUtils.getGasProvider(web3j, transactionManager, binary, specDTO);
         return this.deploy(contract, clazz, gasProvider);
     }
 
@@ -136,8 +61,31 @@ public class ContractClient {
         return this.deploy(contract, AbstractContract.class);
     }
 
-    public  RemoteCall<AbstractContract> deploy(br.com.elysian.tartarus.model.Contract contract, RequestSpecDTO specDTO) throws Exception {
+    public RemoteCall<AbstractContract> deploy(br.com.elysian.tartarus.model.Contract contract, RequestSpecDTO specDTO) throws Exception {
         return this.deploy(contract, AbstractContract.class, specDTO);
     }
+
+
+    public AbstractContract loadContract(String contractAddress, String binary, ContractGasProvider gasProvider) throws ContractLoadFailed {
+        try {
+            return new AbstractContract(binary, contractAddress, web3j, transactionManager, gasProvider);
+        } catch (Exception e) {
+            throw new ContractLoadFailed(messageService.getMessage("tartarus.blockchain.ethereum.unable.create.contract.instance"), e);
+        }
+    }
+
+    public AbstractContract loadContract(CompanyNetworkContract contract, ContractGasProvider gasProvider) throws ContractLoadFailed {
+        String contractAddress = contract.getContractAddress();
+        String binary = contract.getPk().getContract().getBin();
+        return this.loadContract(contractAddress, binary, gasProvider);
+    }
+
+
+    public AbstractContract loadContract(CompanyNetworkContract contract) throws ContractLoadFailed {
+        String contractAddress = contract.getContractAddress();
+        String binary = contract.getPk().getContract().getBin();
+        return this.loadContract(contractAddress, binary, new DefaultGasProvider());
+    }
+
 
 }

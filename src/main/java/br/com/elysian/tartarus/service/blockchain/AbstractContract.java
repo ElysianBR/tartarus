@@ -1,21 +1,24 @@
 package br.com.elysian.tartarus.service.blockchain;
 
 import br.com.elysian.tartarus.dto.v1.blockchain.ParameterDTO;
-import br.com.elysian.tartarus.utils.ParameterUtils;
-import org.web3j.abi.TypeReference;
+import br.com.elysian.tartarus.dto.v1.blockchain.RequestSpecDTO;
+import br.com.elysian.tartarus.utils.BlockchainUtils;
+import br.com.elysian.tartarus.utils.Web3jTypeMapper;
+import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.crypto.Credentials;
 import org.web3j.ens.EnsResolver;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.RemoteFunctionCall;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
+import org.web3j.tx.gas.StaticEIP1559GasProvider;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class AbstractContract extends Contract {
 
@@ -52,11 +55,42 @@ public class AbstractContract extends Contract {
         return new AbstractContract(contract.getContractBinary(), contract.getContractAddress(), web3j, credentials, gasProvider);
     }
 
-//    public RemoteFunctionCall<T> executeFunc(String name, ParameterDTO[] inParams, ParameterDTO[] outParams) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-//        final Function function = new Function(name,
-//                ParameterUtils.castAndList(inParams),
-//                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
-//        return executeRemoteCallSingleValueReturn(function, String.class);
-//    }
+
+    public Function buildFunction(String name, ParameterDTO[] params) {
+//        if (outType != null) {
+//            TypeReference<?> outRef = Web3jTypeMapper.getOutputTypeReference(outType.name());
+//        }
+
+        return new Function(name,
+                Arrays.stream(params)
+                        .map((param) -> {
+                            try {
+                                return Web3jTypeMapper.convertToWeb3Type(param.getType(), param.getValue());
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).toList(),
+//                List.of(outRef)
+                Collections.emptyList()
+        );
+    }
+
+
+    public StaticEIP1559GasProvider estimateFunctionGas(Function function) throws IOException {
+        return BlockchainUtils.getGasProvider(web3j, transactionManager, contractAddress, FunctionEncoder.encode(function));
+    }
+
+    public StaticEIP1559GasProvider estimateFunctionGas(Function function, RequestSpecDTO requestSpec) throws IOException {
+        return BlockchainUtils.getGasProvider(web3j, transactionManager, contractAddress, FunctionEncoder.encode(function), requestSpec);
+    }
+
+
+    public RemoteFunctionCall<TransactionReceipt> executeFunction(Function function, ContractGasProvider gasProvider) {
+        if (gasProvider != null) {
+            this.setGasProvider(gasProvider);
+        }
+//        return executeRemoteCallSingleValueReturn(function, outRef.getClassType());
+        return executeRemoteCallTransaction(function);
+    }
 
 }
