@@ -52,8 +52,9 @@ public class AccountController {
     }
 
 
+    @Transactional
     @PostMapping("/register")
-    public ResponseEntity<TokenDTO> register(@Valid @RequestBody RegisterDTO registerDTO, HttpServletRequest request, HttpServletResponse response) throws ReCaptchaException, EmailAlreadyRegisteredException, InvalidUsernameOrPasswordException {
+    public ResponseEntity<TokenDTO> register(@Valid @RequestBody RegisterDTO registerDTO, HttpServletRequest request, HttpServletResponse response) throws Exception {
         if (!activeProfile.equals("dev")) {
             String captchaResponse = request.getHeader("g-recaptcha-response");
             captchaService.processResponse(captchaResponse);
@@ -77,9 +78,9 @@ public class AccountController {
 
 
     @PostMapping("/confirm")
-    public ResponseEntity<SuccessDTO> confirm(@RequestParam("sequenceToken") String sequenceToken) {
+    public ResponseEntity<TokenDTO> confirm(@RequestParam("sequenceToken") String sequenceToken) throws Exception {
         return ResponseEntity.ok(
-                accountService.confirmAccount(sequenceToken)
+                accountService.confirmAccount(accountService.getAccountLoggedIn(), sequenceToken)
         );
     }
 

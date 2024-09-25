@@ -8,11 +8,13 @@ import br.com.elysian.tartarus.dto.v1.put.AccountDTO;
 import br.com.elysian.tartarus.exception.*;
 import br.com.elysian.tartarus.model.*;
 import br.com.elysian.tartarus.model.pk.AccountRolePK;
+import br.com.elysian.tartarus.model.pk.ConfirmationPK;
 import br.com.elysian.tartarus.repository.*;
 import br.com.elysian.tartarus.utils.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.Optional;
@@ -22,35 +24,38 @@ import java.util.Set;
 public class AccountService {
 
     private final MessageService messageService;
-    private final AuthService authService;
     private final AccountDAO accountDAO;
     private final AccountRoleDAO accountRoleDAO;
     private final RoleDAO roleDAO;
     private final ConfirmationDAO confirmationDAO;
     private final ConfirmationTypeDAO confirmationTypeDAO;
+    private final AuthService authService;
 
 
     @Autowired
     public AccountService(MessageService messageService, AuthService authService, AccountDAO accountDAO, AccountRoleDAO accountRoleDAO, RoleDAO roleDAO, ConfirmationDAO confirmationMailRep, ConfirmationTypeDAO confirmationTypeDAO) {
         this.messageService = messageService;
-        this.authService = authService;
         this.accountDAO = accountDAO;
         this.accountRoleDAO = accountRoleDAO;
         this.roleDAO = roleDAO;
         this.confirmationDAO = confirmationMailRep;
         this.confirmationTypeDAO = confirmationTypeDAO;
+        this.authService = authService;
     }
 
-    public Account register(RegisterDTO registerDTO) throws EmailAlreadyRegisteredException {
+    public Account register(RegisterDTO registerDTO) throws Exception {
         if (accountDAO.existsByEmail(registerDTO.getEmail())) {
             throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email-already-registered"), registerDTO.getEmail()));
         }
-
 
         Account account = accountDAO.save(new Account(registerDTO));
         ConfirmationType confirmationType = confirmationTypeDAO.findById(1).get();
         Confirmation confirmationMail = new Confirmation(account, confirmationType);
         confirmationDAO.save(confirmationMail);
+
+
+        // TODO: Enquanto não é habilitada a confirmação por e-mail, a confrimação é feita automaticamente.
+        confirmAccount(account, confirmationMail.getSequence());
 
 //        SimpleMailMessage mailMessage = new SimpleMailMessage();
 //        mailMessage.setTo(user.getEmail());
@@ -63,12 +68,19 @@ public class AccountService {
     }
 
 
-    public SuccessDTO confirmAccount(String sequenceToken) {
-        Account account = this.getAccountLoggedIn();
-        Optional<Confirmation> optionalConfirmation = account.getEnableConfirmation();
-        if (optionalConfirmation.isPresent()) {
+    public TokenDTO confirmAccount(Account account, String sequenceToken) throws Exception {
+        // TODO: Implementar exceptions mais precisas
 
-            Confirmation confirmationMail = optionalConfirmation.get();
+        Optional<Confirmation> confirmation = confirmationDAO.findById(
+                new ConfirmationPK(
+                        account,
+                        confirmationTypeDAO.findById(1).get()
+                )
+        );
+
+        if (confirmation.isPresent()) {
+
+            Confirmation confirmationMail = confirmation.get();
 
             Date expiration = confirmationMail.getExpiration();
             if (expiration.after(new Date())) {
@@ -90,18 +102,17 @@ public class AccountService {
                     account.setActive(true);
                     this.accountDAO.save(account);
 
-                    return new SuccessDTO(true, messageService.getMessage("tartarus.confirmation.accepted-token"));
-
+                    return authService.getAuthorization(account);
                 } else {
-                    return new SuccessDTO(false, messageService.getMessage("tartarus.confirmation.invalid-token"));
+                    throw new Exception(messageService.getMessage("tartarus.confirmation.invalid-token"));
                 }
 
             } else {
-                return new SuccessDTO(false, messageService.getMessage("tartarus.confirmation.expired-token"));
+                throw new Exception(messageService.getMessage("tartarus.confirmation.expired-token"));
             }
         }
 
-        return new SuccessDTO(false, messageService.getMessage("tartarus.confirmation.not-found-token"));
+        throw new Exception(messageService.getMessage("tartarus.confirmation.not-found-token"));
     }
 
 
