@@ -178,9 +178,7 @@ public class AuthService {
                 jwtService.sign(
                         jwtService.getBuilder(
                                 account,
-                                longLivedToken ?
-                                        JwtService.ExpirationType.LONG_EXPIRATION :
-                                        JwtService.ExpirationType.SIMPLE_EXPIRATION
+                                longLivedToken
                         )
                 )
         );
@@ -196,9 +194,7 @@ public class AuthService {
                 jwtService.sign(
                         jwtService.getBuilder(
                                 accountId,
-                                longLivedToken ?
-                                        JwtService.ExpirationType.LONG_EXPIRATION :
-                                        JwtService.ExpirationType.SIMPLE_EXPIRATION
+                                longLivedToken
                         )
                 )
         );

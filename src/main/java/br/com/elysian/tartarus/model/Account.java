@@ -55,6 +55,10 @@ public class Account {
     private LocalDate dateOfBirth;
 
 
+    @Column(name = "profile_pic", columnDefinition = "TEXT")
+    private String profilePic;
+
+
     @Column(name = "address")
     private String address;
 

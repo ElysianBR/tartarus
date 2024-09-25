@@ -35,7 +35,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenDTO> login(
-            @RequestParam("longLivedToken") boolean longLivedToken,
+            @RequestParam(value = "longLivedToken", required = false) boolean longLivedToken,
             @Valid @RequestBody LoginDTO auth,
             HttpServletRequest request,
             HttpServletResponse response
