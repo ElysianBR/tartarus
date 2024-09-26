@@ -32,7 +32,6 @@ public class JwtService {
 
 
     private JWTCreator.Builder build(Long accountId, boolean longLivedToken) {
-        System.out.println("EXPIRATION_TIME: " + EXPIRATION_TIME);
         return JWT.create()
                 .withSubject(String.valueOf(accountId))
                 .withExpiresAt(

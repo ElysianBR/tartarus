@@ -1,7 +1,7 @@
 package br.com.elysian.tartarus.controller.api.v1.blockchain;
 
 
-import br.com.elysian.tartarus.dto.v1.blockchain.ExecuteFuncDTO;
+import br.com.elysian.tartarus.dto.v1.blockchain.ExecuteRemote;
 import br.com.elysian.tartarus.dto.v1.blockchain.RequestSpecDTO;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.model.Contract;
@@ -10,7 +10,7 @@ import br.com.elysian.tartarus.service.blockchain.ContractClient;
 import br.com.elysian.tartarus.service.blockchain.ContractService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -26,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Controller
 @RequestMapping("/api/v1/blockchain")
+@Tag(name = "Blockchain", description = "Create and manage contracts on the blockchain by executing functions dynamically")
 public class BlockchainController {
 
 
@@ -65,14 +66,14 @@ public class BlockchainController {
     @Transactional
     @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
     @PostMapping("/{module}/{version}/{contractName}/deploy")
-    public CompletableFuture<ResponseEntity<CompanyNetworkContract>> deploy(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @RequestBody RequestSpecDTO requestSpecDTO) throws Exception {
-        ContractClient client = contractService.getContractClient(requestSpecDTO.getPassword());
+    public CompletableFuture<ResponseEntity<CompanyNetworkContract>> deploy(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @RequestBody ExecuteRemote executeRemote) throws Exception {
+        ContractClient client = contractService.getContractClient(executeRemote.getPassword());
         Contract contract = contractService.getContract(contractName, version);
 
         return CompletableFuture.completedFuture(
                 ResponseEntity.ok(
                         contractService.saveDeployInDB(
-                                client.deploy(contract, requestSpecDTO)
+                                client.deploy(contract, executeRemote)
                                         .sendAsync()
                                         .get(),
                                 contractName, version
@@ -86,19 +87,19 @@ public class BlockchainController {
     @Async
     @Transactional
     @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
-    @PostMapping("/{module}/{version}/{contractName}/{functionName}/transact")
-    public CompletableFuture<ResponseEntity<TransactionReceipt>> transact(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @PathVariable String functionName, @RequestBody ExecuteFuncDTO executeFuncDTO) throws Exception {
-        ContractClient client = contractService.getContractClient(executeFuncDTO.getPassword());
+    @PostMapping("/{module}/{version}/{contractName}/{functionName}")
+    public CompletableFuture<ResponseEntity<TransactionReceipt>> transact(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @PathVariable String functionName, @RequestBody ExecuteRemote executeRemote) throws Exception {
+        ContractClient client = contractService.getContractClient(executeRemote.getPassword());
         CompanyNetworkContract contract = contractService.getNetworkContract(contractName, version);
         AbstractContract abstractContract = client.loadContract(contract);
-        Function fun = abstractContract.buildFunction(functionName, executeFuncDTO.getParameters());
+        Function fun = abstractContract.buildFunction(functionName, executeRemote.getParameters());
 
         return CompletableFuture.completedFuture(
                 ResponseEntity.ok(
                         abstractContract
                                 .executeFunction(
                                         fun,
-                                        abstractContract.estimateFunctionGas(fun, executeFuncDTO)
+                                        abstractContract.estimateFunctionGas(fun, executeRemote)
                                 ).sendAsync()
                                 .get()
                 )

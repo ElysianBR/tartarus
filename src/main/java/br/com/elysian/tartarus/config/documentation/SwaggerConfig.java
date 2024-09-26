@@ -27,6 +27,11 @@ import org.springframework.context.annotation.Configuration;
 )
 public class SwaggerConfig {
 
+    private final CustomOpenApiCustomizer customOpenApiCustomizer;
+
+    public SwaggerConfig(CustomOpenApiCustomizer customOpenApiCustomizer) {
+        this.customOpenApiCustomizer = customOpenApiCustomizer;
+    }
 
     @Bean
     public GroupedOpenApi v1Api() {
@@ -35,6 +40,7 @@ public class SwaggerConfig {
                 .pathsToMatch("/api/v1/**")
                 .displayName("version 1")
                 .addOperationCustomizer(new CustomOperationCustomizer())
+                .addOpenApiCustomizer(customOpenApiCustomizer)
                 .build();
     }
 

@@ -7,6 +7,7 @@ import br.com.elysian.tartarus.exception.ReCaptchaInvalidException;
 import br.com.elysian.tartarus.exception.ReCaptchaUnavailableException;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.captcha.CaptchaService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Auth", description = "Log in and be authorized")
 public class AuthController {
 
 

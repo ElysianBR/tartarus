@@ -8,6 +8,7 @@ import br.com.elysian.tartarus.exception.InvalidUsernameOrPasswordException;
 import br.com.elysian.tartarus.model.Company;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.CompanyService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +16,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/company")
+@Tag(name = "Company", description = "Manage account and receive authorization")
 public class CompanyController {
 
 

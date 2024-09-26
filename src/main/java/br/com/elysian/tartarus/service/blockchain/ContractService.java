@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -62,6 +63,12 @@ public class ContractService {
 
         throw new ContractNotFoundException(String.format(messageService.getMessage("tartarus.blockchain.contract.not-found"), contractName, version));
     }
+
+
+    public Iterable<Contract> getContractsAvailable() {
+        return contractDAO.findAll();
+    }
+
 
     public CompanyNetworkContract getNetworkContract(String contractName, String version) throws ContractNotFoundException, NetworkNotLoggedInException, CompanyNotLoggedInException, NetworkNotFoundException, NetworkContractNotRegistered {
         Contract contract = this.getContract(contractName, version);

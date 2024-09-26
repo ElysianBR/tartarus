@@ -46,7 +46,7 @@ public class AuthService {
     @Getter
     private static final String HEADER_STRING = "Authorization";
     @Getter
-    private static final String HEADER_EXPIRES_STRING = "Expires";
+    private static final String HEADER_EXPIRES_STRING = "X-Expires";
 
     @Autowired
     private AuthService(MessageService messageService, AccountDAO accountDAO, AccountRoleDAO accountRoleDAO, JwtService jwtUtil) {
@@ -224,7 +224,7 @@ public class AuthService {
 
 
     public void setHeaders(TokenDTO jwtToken, HttpServletResponse response) {
-        response.setHeader("Access-Control-Expose-Headers", HEADER_STRING);
+        response.setHeader("Access-Control-Expose-Headers", String.format("%s, %s", HEADER_STRING, HEADER_EXPIRES_STRING));
         response.addHeader(HEADER_STRING, String.format("%s %s", TOKEN_PREFIX, jwtToken.getToken()));
         response.addHeader(HEADER_EXPIRES_STRING, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(jwtToken.getExpiresIn()));
     }

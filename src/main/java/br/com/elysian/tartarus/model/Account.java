@@ -86,7 +86,7 @@ public class Account {
 
 
     @Column(name = "enable")
-    private boolean enable = false;
+    private Boolean enable = false;
 
 
     @JsonIgnore

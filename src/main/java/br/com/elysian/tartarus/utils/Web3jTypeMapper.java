@@ -18,17 +18,21 @@ public class Web3jTypeMapper {
         string
     }
 
-    private static final Map<Types, Class<? extends Type>> typeMap = new HashMap<>();
+    private static final Map<String, Class<? extends Type>> typeMap = new HashMap<>();
 
     static {
-        typeMap.put(Types.address, Address.class);
-        typeMap.put(Types.uint256, Uint256.class);
-        typeMap.put(Types.uint, Uint.class);
-        typeMap.put(Types.bool, Bool.class);
-        typeMap.put(Types.string, Utf8String.class);
+        typeMap.put("address", Address.class);
+        typeMap.put("uint256", Uint256.class);
+        typeMap.put("uint", Uint.class);
+        typeMap.put("bool", Bool.class);
+        typeMap.put("string", Utf8String.class);
     }
 
     public static Type convertToWeb3Type(Types typeName, Object value) throws Exception {
+        return convertToWeb3Type(typeName.name(), value);
+    }
+
+        public static Type convertToWeb3Type(String typeName, Object value) throws Exception {
         Class<? extends Type> typeClass = typeMap.get(typeName);
         if (typeClass != null) {
 

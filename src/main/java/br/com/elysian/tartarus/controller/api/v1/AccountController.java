@@ -10,6 +10,7 @@ import br.com.elysian.tartarus.model.Role;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.AccountService;
 import br.com.elysian.tartarus.service.captcha.CaptchaService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/account")
+@Tag(name = "Account", description = "Manage the Account")
 public class AccountController {
 
     @Value("${spring.profiles.active}")
