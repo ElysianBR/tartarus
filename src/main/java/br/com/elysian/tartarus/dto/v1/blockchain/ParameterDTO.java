@@ -12,9 +12,4 @@ import java.math.BigDecimal;
 public class ParameterDTO {
     private String type;
     private Object value;
-
-    public ParameterDTO(Web3jTypeMapper.Types types, Object value) {
-        this.type = types.name();
-        this.value = types.name();
-    }
 }

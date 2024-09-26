@@ -12,9 +12,9 @@ public class ExecuteRemote extends RequestSpecDTO {
 
     // TODO: Mudar parâmetros, ao invés de utilizar um array, utilizar um map com o nome do parâmetro...
     private final Map<String, ParameterDTO> parameters;
-    private final Web3jTypeMapper.Types outType;
+    private final String outType;
 
-    public ExecuteRemote(Map<String, ParameterDTO> parameters, Web3jTypeMapper.Types outType, BigInteger gasPriceWei, BigInteger maxPriorityFeePerGasGwei, BigInteger gasLimitWei, String password) {
+    public ExecuteRemote(Map<String, ParameterDTO> parameters, String outType, BigInteger gasPriceWei, BigInteger maxPriorityFeePerGasGwei, BigInteger gasLimitWei, String password) {
         super(gasPriceWei, maxPriorityFeePerGasGwei, gasLimitWei, password);
         this.parameters = parameters;
         this.outType = outType;
