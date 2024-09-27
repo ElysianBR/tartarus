@@ -6,6 +6,7 @@ import br.com.elysian.tartarus.dto.v1.patch.PasswordDTO;
 import br.com.elysian.tartarus.dto.v1.post.RegisterDTO;
 import br.com.elysian.tartarus.dto.v1.put.AccountDTO;
 import br.com.elysian.tartarus.exception.*;
+import br.com.elysian.tartarus.mapper.AccountMapper;
 import br.com.elysian.tartarus.model.*;
 import br.com.elysian.tartarus.model.pk.AccountRolePK;
 import br.com.elysian.tartarus.model.pk.ConfirmationPK;
@@ -14,7 +15,6 @@ import br.com.elysian.tartarus.utils.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.Optional;
@@ -30,10 +30,11 @@ public class AccountService {
     private final ConfirmationDAO confirmationDAO;
     private final ConfirmationTypeDAO confirmationTypeDAO;
     private final AuthService authService;
+    private final AccountMapper accountMapper;
 
 
     @Autowired
-    public AccountService(MessageService messageService, AuthService authService, AccountDAO accountDAO, AccountRoleDAO accountRoleDAO, RoleDAO roleDAO, ConfirmationDAO confirmationMailRep, ConfirmationTypeDAO confirmationTypeDAO) {
+    public AccountService(MessageService messageService, AuthService authService, AccountDAO accountDAO, AccountRoleDAO accountRoleDAO, RoleDAO roleDAO, ConfirmationDAO confirmationMailRep, ConfirmationTypeDAO confirmationTypeDAO, AccountMapper accountMapper) {
         this.messageService = messageService;
         this.accountDAO = accountDAO;
         this.accountRoleDAO = accountRoleDAO;
@@ -41,6 +42,7 @@ public class AccountService {
         this.confirmationDAO = confirmationMailRep;
         this.confirmationTypeDAO = confirmationTypeDAO;
         this.authService = authService;
+        this.accountMapper = accountMapper;
     }
 
     public Account register(RegisterDTO registerDTO) throws Exception {
@@ -48,7 +50,10 @@ public class AccountService {
             throw new EmailAlreadyRegisteredException(String.format(messageService.getMessage("tartarus.validations.email-already-registered"), registerDTO.getEmail()));
         }
 
-        Account account = accountDAO.save(new Account(registerDTO));
+        Account account = new Account();
+        accountMapper.fromRegisterDTO(registerDTO, account);
+        account.setPassword(PasswordUtils.hashPassword(registerDTO.getPassword()));
+        account = accountDAO.save(account);
         ConfirmationType confirmationType = confirmationTypeDAO.findById(1).get();
         Confirmation confirmationMail = new Confirmation(account, confirmationType);
         confirmationDAO.save(confirmationMail);
@@ -126,7 +131,7 @@ public class AccountService {
 
     public Account put(AccountDTO accountDTO) {
         Account account = this.getAccountLoggedIn();
-        account.setAccountFromDTO(accountDTO);
+        accountMapper.fromAccountDTO(accountDTO, account);
         return accountDAO.save(account);
     }
 

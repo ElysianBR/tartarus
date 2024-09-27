@@ -10,8 +10,6 @@ public interface CRUDRepository<T, ID> extends Repository<T, ID> {
 
     <S extends T> S save(S entity);
 
-//    <S extends T> void merge(S entity);
-
     <S extends T> Iterable<S> saveAll(Iterable<S> entities);
 
     Optional<T> findById(ID id);

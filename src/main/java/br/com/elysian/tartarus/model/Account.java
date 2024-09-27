@@ -2,8 +2,6 @@ package br.com.elysian.tartarus.model;
 
 import br.com.elysian.tartarus.dto.v1.post.RegisterDTO;
 import br.com.elysian.tartarus.dto.v1.put.AccountDTO;
-import br.com.elysian.tartarus.utils.PasswordUtils;
-import br.com.elysian.tartarus.view.RoleViews;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -13,11 +11,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.validator.constraints.Length;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.Set;
 
 @Getter
@@ -26,7 +25,6 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(schema = "tartarus", name = "account")
-//@JsonView(RoleViews.AccountView.class)
 public class Account {
 
     @Id
@@ -85,10 +83,6 @@ public class Account {
     private String password;
 
 
-    @Column(name = "enable")
-    private boolean enable = false;
-
-
     @JsonIgnore
     @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
     private Set<AccountRole> accountRoles;
@@ -128,23 +122,6 @@ public class Account {
             return this.accountRoles.iterator().next().getRole();
         }
         return null;
-    }
-
-
-    public Account(RegisterDTO registerDTO) {
-        this.firstName = registerDTO.getFirstName();
-        this.lastName = registerDTO.getLastName();
-        this.email = registerDTO.getEmail();
-        this.password = PasswordUtils.hashPassword(registerDTO.getPassword());
-    }
-
-    @JsonIgnore
-    public void setAccountFromDTO(AccountDTO accountDTO) {
-        // TODO: Implements set Model from dynamic DTO.
-        this.firstName = accountDTO.getFirstName();
-        this.lastName = accountDTO.getLastName();
-        this.email = accountDTO.getEmail();
-        this.dateOfBirth = accountDTO.getDateOfBirth();
     }
 
 }

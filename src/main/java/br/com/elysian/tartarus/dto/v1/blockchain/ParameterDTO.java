@@ -10,6 +10,6 @@ import java.math.BigDecimal;
 @Getter
 @AllArgsConstructor
 public class ParameterDTO {
-    private Web3jTypeMapper.Types type;
+    private String type;
     private Object value;
 }

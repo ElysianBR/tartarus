@@ -44,20 +44,20 @@ public class BlockchainUtils {
     }
 
 
-    public static BigInteger getEstimatedGasConstructor(Web3j web3j, BigInteger gasPrice, String from, String bytecode) throws IOException {
+    public static BigInteger getEstimatedGasConstructor(Web3j web3j, String from, String bytecode) throws IOException {
         return web3j.ethEstimateGas(Transaction.createContractTransaction(
                 from,
                 null,
-                gasPrice,
+                null,
                 bytecode
         )).send().getAmountUsed();
     }
 
-    public static BigInteger getEstimatedGasFunction(Web3j web3j, BigInteger gasPrice, String from, String contractAddress, String data) throws IOException {
+    public static BigInteger getEstimatedGasFunction(Web3j web3j, String from, String contractAddress, String data) throws IOException {
         return web3j.ethEstimateGas(Transaction.createFunctionCallTransaction(
                 from,
                 null,
-                gasPrice,
+                null,
                 null,
                 contractAddress,
                 null,
@@ -89,9 +89,9 @@ public class BlockchainUtils {
         BigInteger maxFeePerGas = baseFee.add(DEFAULT_MAX_PRIORITY_FEE_PER_GAS);
         BigInteger estimateGas;
         if (contractAddress == null) {
-            estimateGas = getEstimatedGasConstructor(web3j, baseFee, fromAddress, binary);
+            estimateGas = getEstimatedGasConstructor(web3j, fromAddress, binary);
         } else {
-            estimateGas = getEstimatedGasFunction(web3j, baseFee, fromAddress, contractAddress, binary);
+            estimateGas = getEstimatedGasFunction(web3j, fromAddress, contractAddress, binary);
         }
         return getEIP1559GasProvider(web3j, maxFeePerGas, estimateGas);
     }
@@ -102,32 +102,36 @@ public class BlockchainUtils {
 
     public static StaticEIP1559GasProvider getGasProvider(Web3j web3j, TransactionManager transactionManager, String contractAddress, String binary, RequestSpecDTO specDTO) throws IOException {
         if (specDTO.getGasPriceWei() != null || specDTO.getMaxPriorityFeePerGasGwei() != null || specDTO.getGasLimitWei() != null) {
-            BigInteger baseFee;
-            BigInteger maxPriorityFeePerGas;
-            BigInteger gasLimit;
 
+
+            BigInteger gasLimit;
+            if (specDTO.getGasLimitWei() != null) {
+                gasLimit = specDTO.getGasLimitWei();
+            } else {
+                String fromAddress = transactionManager.getFromAddress();
+                if (contractAddress == null) {
+                    gasLimit = getEstimatedGasConstructor(web3j, fromAddress, binary);
+                } else {
+                    gasLimit = getEstimatedGasFunction(web3j, fromAddress, contractAddress, binary);
+                }
+            }
+
+
+            BigInteger baseFee;
             if (specDTO.getGasPriceWei() != null) {
                 baseFee = specDTO.getGasPriceWei();
             } else {
                 baseFee = getBaseFee(web3j);
             }
 
+
+            BigInteger maxPriorityFeePerGas;
             if (specDTO.getMaxPriorityFeePerGasGwei() != null) {
                 maxPriorityFeePerGas = specDTO.getMaxPriorityFeePerGasGwei();
             } else {
                 maxPriorityFeePerGas = DEFAULT_MAX_PRIORITY_FEE_PER_GAS;
             }
 
-            if (specDTO.getGasLimitWei() != null) {
-                gasLimit = specDTO.getGasLimitWei();
-            } else {
-                String fromAddress = transactionManager.getFromAddress();
-                if (contractAddress == null) {
-                    gasLimit = getEstimatedGasConstructor(web3j, baseFee, fromAddress, binary);
-                } else {
-                    gasLimit = getEstimatedGasFunction(web3j, baseFee, fromAddress, contractAddress, binary);
-                }
-            }
 
             BigInteger maxFeePerGas = baseFee.add(maxPriorityFeePerGas);
 

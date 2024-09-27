@@ -19,6 +19,7 @@ import org.web3j.tx.gas.StaticEIP1559GasProvider;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 
 public class AbstractContract extends Contract {
 
@@ -56,14 +57,15 @@ public class AbstractContract extends Contract {
     }
 
 
-    public Function buildFunction(String name, ParameterDTO[] params) {
+    public Function buildFunction(String name, Map<String, ParameterDTO> params) {
 //        if (outType != null) {
 //            TypeReference<?> outRef = Web3jTypeMapper.getOutputTypeReference(outType.name());
 //        }
 
         return new Function(name,
-                Arrays.stream(params)
-                        .map((param) -> {
+                params.values()
+                        .stream()
+                        .map(param -> {
                             try {
                                 return Web3jTypeMapper.convertToWeb3Type(param.getType(), param.getValue());
                             } catch (Exception e) {

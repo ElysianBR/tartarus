@@ -9,6 +9,7 @@ import br.com.elysian.tartarus.model.Network;
 import br.com.elysian.tartarus.service.AuthService;
 import br.com.elysian.tartarus.service.blockchain.NetworkService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/blockchain/network")
+@Tag(name = "Network", description = "Manage network, save your wallet and receive authorization")
 public class NetworkController {
 
     private final AuthService authService;

@@ -1,15 +1,11 @@
 package br.com.elysian.tartarus.dto.v1.put;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
 
 import java.time.LocalDate;
 
 @Getter
-@NonNull
-@NotBlank
 @AllArgsConstructor
 public class AccountDTO {
 
@@ -17,5 +13,9 @@ public class AccountDTO {
     private String lastName;
     private LocalDate dateOfBirth;
     private String email;
+    private String address;
+    private String city;
+    private String state;
+    private String country;
 
 }
