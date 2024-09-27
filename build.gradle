@@ -32,6 +32,7 @@ dependencies {
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
     implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
+    implementation 'org.mapstruct:mapstruct:1.6.2'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.5.0'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -47,6 +48,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     runtimeOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -70,6 +72,7 @@ tasks.register('copyJar', Copy) {
     into 'build/libs'
     rename "${project.name}-${project.version}.jar", 'tartarus.jar'
 }
+
 tasks.named('build') {
     finalizedBy 'copyJar'
 }

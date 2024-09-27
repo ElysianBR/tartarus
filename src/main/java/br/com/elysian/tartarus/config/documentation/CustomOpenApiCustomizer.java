@@ -1,6 +1,6 @@
 package br.com.elysian.tartarus.config.documentation;
 
-import br.com.elysian.tartarus.dto.v1.blockchain.ExecuteRemote;
+import br.com.elysian.tartarus.dto.v1.blockchain.ExecuteRemoteDTO;
 import br.com.elysian.tartarus.dto.v1.blockchain.ParameterDTO;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.model.Contract;
@@ -14,7 +14,6 @@ import io.swagger.v3.oas.models.media.*;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
-import io.swagger.v3.oas.models.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.core.customizers.OpenApiCustomizer;
@@ -144,7 +143,7 @@ public class CustomOpenApiCustomizer implements OpenApiCustomizer {
 
 
     private RequestBody generateRequestBody(List<Map<String, Object>> inputs) {
-        Schema executeRemote = generateSchemaFromClass(ExecuteRemote.class);
+        Schema executeRemote = generateSchemaFromClass(ExecuteRemoteDTO.class);
 
         Schema<Map<String, ParameterDTO>> parametersMapSchema = new Schema<>();
         for (Map<String, Object> input : inputs) {

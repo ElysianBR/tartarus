@@ -72,7 +72,7 @@ public class AccountController {
 
     @PutMapping()
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
-    public ResponseEntity<Account> put(@Valid @RequestBody AccountDTO accountDTO) {
+    public ResponseEntity<Account> put(@RequestBody AccountDTO accountDTO) {
         return ResponseEntity.ok(
                 accountService.put(accountDTO)
         );

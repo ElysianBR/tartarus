@@ -1,8 +1,7 @@
 package br.com.elysian.tartarus.controller.api.v1.blockchain;
 
 
-import br.com.elysian.tartarus.dto.v1.blockchain.ExecuteRemote;
-import br.com.elysian.tartarus.dto.v1.blockchain.RequestSpecDTO;
+import br.com.elysian.tartarus.dto.v1.blockchain.ExecuteRemoteDTO;
 import br.com.elysian.tartarus.model.CompanyNetworkContract;
 import br.com.elysian.tartarus.model.Contract;
 import br.com.elysian.tartarus.service.blockchain.AbstractContract;
@@ -66,14 +65,14 @@ public class BlockchainController {
     @Transactional
     @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
     @PostMapping("/{module}/{version}/{contractName}/deploy")
-    public CompletableFuture<ResponseEntity<CompanyNetworkContract>> deploy(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @RequestBody ExecuteRemote executeRemote) throws Exception {
-        ContractClient client = contractService.getContractClient(executeRemote.getPassword());
+    public CompletableFuture<ResponseEntity<CompanyNetworkContract>> deploy(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @RequestBody ExecuteRemoteDTO executeRemoteDTO) throws Exception {
+        ContractClient client = contractService.getContractClient(executeRemoteDTO.getPassword());
         Contract contract = contractService.getContract(contractName, version);
 
         return CompletableFuture.completedFuture(
                 ResponseEntity.ok(
                         contractService.saveDeployInDB(
-                                client.deploy(contract, executeRemote)
+                                client.deploy(contract, executeRemoteDTO)
                                         .sendAsync()
                                         .get(),
                                 contractName, version
@@ -88,18 +87,18 @@ public class BlockchainController {
     @Transactional
     @PreAuthorize("hasAnyAuthority('COMPANY_ADMIN')")
     @PostMapping("/{module}/{version}/{contractName}/{functionName}")
-    public CompletableFuture<ResponseEntity<TransactionReceipt>> transact(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @PathVariable String functionName, @RequestBody ExecuteRemote executeRemote) throws Exception {
-        ContractClient client = contractService.getContractClient(executeRemote.getPassword());
+    public CompletableFuture<ResponseEntity<TransactionReceipt>> transact(@PathVariable String module, @PathVariable String version, @PathVariable String contractName, @PathVariable String functionName, @RequestBody ExecuteRemoteDTO executeRemoteDTO) throws Exception {
+        ContractClient client = contractService.getContractClient(executeRemoteDTO.getPassword());
         CompanyNetworkContract contract = contractService.getNetworkContract(contractName, version);
         AbstractContract abstractContract = client.loadContract(contract);
-        Function fun = abstractContract.buildFunction(functionName, executeRemote.getParameters());
+        Function fun = abstractContract.buildFunction(functionName, executeRemoteDTO.getParameters());
 
         return CompletableFuture.completedFuture(
                 ResponseEntity.ok(
                         abstractContract
                                 .executeFunction(
                                         fun,
-                                        abstractContract.estimateFunctionGas(fun, executeRemote)
+                                        abstractContract.estimateFunctionGas(fun, executeRemoteDTO)
                                 ).sendAsync()
                                 .get()
                 )
