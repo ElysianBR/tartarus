@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'br.com.elysian'
-version = '0.2.2-SNAPSHOT'
+version = '0.2.3-SNAPSHOT'
 
 java {
     sourceCompatibility = '21'
