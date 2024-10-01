@@ -136,6 +136,13 @@ public class AccountService {
     }
 
 
+    public void updateProfilePic(String dataPic) {
+        Account account = this.getAccountLoggedIn();
+        account.setProfilePic(dataPic);
+        accountDAO.save(account);
+    }
+
+
     public Account updatePassword(PasswordDTO passwordDTO) throws MismatchedPasswordsException, NewPasswordEqualsOldPasswordException {
         Account account = this.getAccountLoggedIn();
 

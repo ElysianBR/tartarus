@@ -87,6 +87,13 @@ public class AccountController {
     }
 
 
+    @PatchMapping("/profile-pic")
+    public ResponseEntity<Void> updateProfilePic(@RequestBody String dataPic) {
+        accountService.updateProfilePic(dataPic);
+        return ResponseEntity.ok().build();
+    }
+
+
     @PatchMapping("/password")
     @PreAuthorize("hasAnyAuthority('ACCOUNT')")
     public ResponseEntity<TokenDTO> updatePassword(@Valid @RequestBody PasswordDTO passwordDTO, HttpServletRequest request, HttpServletResponse response) throws NewPasswordEqualsOldPasswordException, MismatchedPasswordsException, InvalidUsernameOrPasswordException, ReCaptchaUnavailableException, ReCaptchaInvalidException {

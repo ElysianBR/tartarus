@@ -6,7 +6,7 @@ import br.com.elysian.tartarus.model.Account;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+    @Mapper(componentModel = "spring")
     public interface AccountMapper {
         //@BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
         void fromAccountDTO(AccountDTO dto, @MappingTarget Account model);
