@@ -25,12 +25,12 @@ WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account WHERE id = 0);
 
 
 INSERT INTO "tartarus".account(active, id, first_name, last_name, email, password)
-SELECT true, 1, 'User', 'One', 'user1@mail.com.br', '$2a$12$8MJBzmoj9LBQdJUXngszmeZSI8H7yEEuBhIXrsJWN1WJGRZQjJxDe'
+SELECT true, nextval(account_id_seq), 'User', 'One', 'user1@mail.com.br', '$2a$12$8MJBzmoj9LBQdJUXngszmeZSI8H7yEEuBhIXrsJWN1WJGRZQjJxDe'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account WHERE id = 1);
 
 
 INSERT INTO "tartarus".company(id, active, cnpj, company_name)
-SELECT 1,
+SELECT nextval(company_id_seq),
        TRUE,
        '000000/000000',
        'company for development'
@@ -62,19 +62,19 @@ WHERE NOT EXISTS (SELECT 1 FROM "tartarus".account_role WHERE account_id = 1 AND
 
 
 INSERT INTO "tartarus".confirmation_type(id, description)
-SELECT 1,
+SELECT nextval(confirmation_type_id_seq),
        'E-mail - Enable Account'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".confirmation_type WHERE id = 1);
 
 
 INSERT INTO "tartarus".confirmation_type(id, description)
-SELECT 2,
+SELECT nextval(confirmation_type_id_seq),
        'E-mail - 2F'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".confirmation_type WHERE id = 2);
 
 
 INSERT INTO "tartarus".blockchain(id, active, name, tag, description, infura_key)
-SELECT 1,
+SELECT nextval(blockchain_id_seq),
        true,
        'Ethereum',
        'ETH',
@@ -84,13 +84,13 @@ WHERE NOT EXISTS (SELECT 1 FROM "tartarus".blockchain WHERE id = 1);
 
 
 INSERT INTO "tartarus".network_type(id, type_name)
-SELECT 1,
+SELECT nextval(network_type_id_seq),
        'Testnet'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".network_type WHERE id = 1);
 
 
 INSERT INTO "tartarus".network_type(id, type_name)
-SELECT 2,
+SELECT nextval(network_type_id_seq),
        'Production'
 WHERE NOT EXISTS (SELECT 1 FROM "tartarus".network_type WHERE id = 2);
 
