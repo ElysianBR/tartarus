@@ -20,7 +20,6 @@ public class Network {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "network_id", sequenceName = "network_id_seq", schema = "tartarus")
     @Column(name = "id", length = 10)
     private Long id;
 

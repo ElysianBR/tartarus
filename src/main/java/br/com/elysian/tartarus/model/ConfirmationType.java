@@ -12,7 +12,6 @@ public class ConfirmationType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "confirmation_type_id", sequenceName = "confirmation_type_id_seq", schema = "tartarus")
     @Column(name = "id")
     private int id;
 

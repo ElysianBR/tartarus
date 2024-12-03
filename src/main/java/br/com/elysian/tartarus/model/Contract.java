@@ -30,10 +30,6 @@ public class Contract {
 //    @JsonView({RoleViews.CompanyAdminView.class, RoleViews.AdminView.class})
     private String version;
 
-    @Column(name = "class_name", unique = true)
-//    @JsonView(RoleViews.AdminView.class)
-    private String className;
-
     @Column(name = "bin", columnDefinition = "TEXT")
 //    @JsonView({RoleViews.CompanyAdminView.class, RoleViews.AdminView.class})
     private String bin;

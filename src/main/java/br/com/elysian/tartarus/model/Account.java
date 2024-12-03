@@ -29,7 +29,6 @@ public class Account {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "account_id", sequenceName = "account_id_seq", schema = "tartarus")
     @Column(name = "id")
     private Long id;
 

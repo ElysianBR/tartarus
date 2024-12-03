@@ -1,37 +1,37 @@
 services:
-  spring-service:
-    container_name: spring-service
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=dev
-    ports:
-      - 8080:8080
-    networks:
-      - spring-cloud-network
-    depends_on:
-      db:
-        condition: service_healthy
+    spring-service:
+        container_name: spring-service
+        build:
+            context: .
+            dockerfile: Dockerfile
+        environment:
+            - SPRING_PROFILES_ACTIVE=dev
+        ports:
+            - 8080:8080
+        networks:
+            - spring-cloud-network
+        depends_on:
+            db:
+                condition: service_healthy
 
-  db:
-    image: postgres:16
-    container_name: db
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=TARTARUS
-      - POSTGRES_PASSWORD=TARTARUS
-      - POSTGRES_DB=TARTARUS
+    db:
+        image: postgres:16
+        container_name: db
+        ports:
+            - "5432:5432"
+        environment:
+            - POSTGRES_USER=TARTARUS
+            - POSTGRES_PASSWORD=TARTARUS
+            - POSTGRES_DB=TARTARUS
 
-    networks:
-      - spring-cloud-network
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+        networks:
+            - spring-cloud-network
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
 
 networks:
-  spring-cloud-network:
-    driver: bridge
+    spring-cloud-network:
+        driver: bridge

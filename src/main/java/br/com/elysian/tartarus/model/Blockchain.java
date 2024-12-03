@@ -20,7 +20,6 @@ public class Blockchain {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "blockchain_id", sequenceName = "blockchain_id_seq", schema = "tartarus")
     @Column(name = "id", length = 10)
     private Long id;
 
