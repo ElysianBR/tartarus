@@ -21,7 +21,7 @@ ON CONFLICT (id)
 
 
 INSERT INTO "tartarus".company(id, active, cnpj, company_name)
-values (0, TRUE, '000000/000000', 'company for development')
+values (1, TRUE, '000000/000000', 'company for development')
 ON CONFLICT (id)
     DO UPDATE SET active       = EXCLUDED.active,
                   cnpj         = EXCLUDED.cnpj,
@@ -30,7 +30,7 @@ ON CONFLICT (id)
 
 
 INSERT INTO "tartarus".company_account(account_id, company_id)
-VALUES (0, 0)
+VALUES (1, 1)
 ON CONFLICT (account_id, company_id)
     DO NOTHING;
 
@@ -54,7 +54,7 @@ ON CONFLICT (id)
 
 
 INSERT INTO "tartarus".blockchain(id, active, name, tag, description, infura_key)
-VALUES (0, true, 'Ethereum', 'ETH', 'Ethereum Blockchain (Powered by EVM)', '3d68fcabd2e8418991dd69df8082a322')
+VALUES (1, true, 'Ethereum', 'ETH', 'Ethereum Blockchain (Powered by EVM)', '3d68fcabd2e8418991dd69df8082a322')
 ON CONFLICT (tag) DO UPDATE SET active      = EXCLUDED.active,
                                 name        = EXCLUDED.name,
                                 description = EXCLUDED.description,
@@ -71,7 +71,7 @@ ON CONFLICT (id)
 
 
 INSERT INTO "tartarus".network(active, type_id, tag, blockchain_id, id, name, description, network_url, infura_url)
-VALUES (true, 0, 'SEPOL', 0, 0, 'Sepolia ETH', 'Testnet Ethereum for development', 'https://rpc2.sepolia.org',
+VALUES (true, 0, 'SEPOL', 1, 1, 'Sepolia ETH', 'Testnet Ethereum for development', 'https://rpc2.sepolia.org',
         'https://sepolia.infura.io/v3')
 ON CONFLICT (tag)
     DO UPDATE SET active        = EXCLUDED.active,
@@ -96,14 +96,14 @@ ON CONFLICT (name, version)
 
 
 INSERT INTO "tartarus".company_network(company_id, blockchain_id, max_gas_wei)
-VALUES (0, 0, 0)
+VALUES (1, 1, 0)
 ON CONFLICT (company_id, blockchain_id)
     DO UPDATE SET max_gas_wei = EXCLUDED.max_gas_wei;
 
 
 
 INSERT INTO "tartarus".company_network_account(account_id, blockchain_id, company_id, address, max_gas_wei)
-VALUES (1, 0, 0, '0xBB4520524293176B981f3e9Fc1bFe167b08Daa51', 0)
+VALUES (1, 10, 0, '0xBB4520524293176B981f3e9Fc1bFe167b08Daa51', 0)
 ON CONFLICT (account_id, company_id, blockchain_id)
     DO UPDATE SET max_gas_wei = EXCLUDED.max_gas_wei,
                   address     = EXCLUDED.address;
