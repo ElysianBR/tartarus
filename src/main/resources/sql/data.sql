@@ -103,7 +103,7 @@ ON CONFLICT (company_id, blockchain_id)
 
 
 INSERT INTO "tartarus".company_network_account(account_id, blockchain_id, company_id, address, max_gas_wei)
-VALUES (1, 10, 0, '0xBB4520524293176B981f3e9Fc1bFe167b08Daa51', 0)
+VALUES (1, 1, 1, '0xBB4520524293176B981f3e9Fc1bFe167b08Daa51', 0)
 ON CONFLICT (account_id, company_id, blockchain_id)
     DO UPDATE SET max_gas_wei = EXCLUDED.max_gas_wei,
                   address     = EXCLUDED.address;
